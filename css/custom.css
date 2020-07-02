@@ -35,7 +35,7 @@ body {
 
 
 .sidebar-link.active,.sidebar-link:focus{
-    background:#8c1515;
+    background:#005279;
     color:#fff !important;
     text-decoration:none
 }
@@ -91,7 +91,7 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
     border-radius:0rem;
     background-color:#b6b1a9;
     border-color:#b6b1a9;
-    color:#8c1515;
+    color:#005279;
     font-size: 1em;
     font-family: 'Lato', sans-serif;
     font-weight: 400;
@@ -446,7 +446,7 @@ html, body {
 }
 
 a, a:hover, a:focus {
-    color:#8c1515;
+    color:#005279;
 }
 
 .clickable{
