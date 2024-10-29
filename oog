@@ -1,0 +1,1429 @@
+
+\documentclass[11pt]{article}
+%\usepackage[pdftex]{graphicx}
+\usepackage{graphicx}
+\usepackage[lmargin=1in, rmargin=1in, tmargin=1in, bmargin=1in]{geometry}
+\usepackage{tikz}
+\input{chain_diag.tikzstyles}
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e} % Loads algorithm2e with options for numbered lines, rules, and vertical lines
+\usepackage{subfigure}
+\input{includes_macros}
+\usepackage{subcaption}
+\usepackage[shortlabels]{enumitem}
+\usepackage{booktabs}
+\usepackage[makeroom]{cancel}
+
+\pagestyle{plain}
+ \newcommand{\arrowIn}{
+\tikz \draw[-stealth] (-1pt,0) -- (1pt,0);
+}
+%
+\renewcommand{\thefootnote}{\arabic{footnote}}
+\usepackage{pdflscape}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem*{claim}{Claim}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem*{fact}{Fact}
+\newtheorem*{remark}{Remark}
+\definecolor{blue}{RGB}{0,114,178}
+\definecolor{red}{RGB}{213,94,0}
+\definecolor{yellow}{RGB}{240,228,66}
+\definecolor{green}{RGB}{0,158,115}
+\definecolor{primaryred}{RGB}{255, 0, 0}
+\renewcommand{\arraystretch}{1.1}%
+
+
+\title{Trade Frictions in Surface Water Markets}
+\author{Billy Ferguson \\ Graduate School of Business \\ Stanford University \\ 
+\texttt{billyf@stanford.edu} \\ 
+\href{https://billyferguson.github.io/JMP.pdf}{Link to Latest Version}}
+\date{Last Updated \today}
+
+
+
+\begin{document}
+
+\begin{onehalfspacing}
+
+\maketitle
+
+\begin{abstract}
+This paper studies the barriers to water trade in California's surface water market, where trade activity remains low—less than 5\% of surface water is traded annually—despite significant price disparities between users. We build and estimate a model of California's water market to decompose informational and infrastructural frictions and simulate counterfactual policies. The model features agricultural production, urban demand, hydrological externalities, and bilateral transaction costs. Our findings show that despite qualitative concern about the regulatory burden of managing externalities, this friction is relatively modest. Incomplete property rights represent a significant source of friction in California’s surface water market, alongside constraints on transfers that cross an important bottleneck in the system. We estimate that constructing new infrastructure coupled with streamlining water rights management would quadruple trade volume and increase agricultural profits by 10\% while also increasing environmental water supply. While these interventions reduce misallocation amongst farmers, they do do not significantly benefit urban buyers. 
+\end{abstract}
+
+\newpage 
+
+\section{Introduction}
+
+Water is a crucial upstream input to all economic output. While global water demand is expected to increase 20-30\% by 2050, a changing climate continues to decrease supply \citep{boretti2019reassessing}. Water trade facilitates efficient climate adaptation, but water markets are virtually non-existent with less than 1\% of water claims traded internationally \citep{Rafey2023}. In California, limited market activity is especially puzzling given legacy water rights and massive dispersion in water prices.
+
+In Figure \ref{fig:intro_fig}(a) we depict the distribution of water prices per acre-foot in California for agricultural and municipal users.\footnote{An acre-foot is the amount of water required to fill an acre of land with a foot of water. Annually, the average family of four in California uses 0.5 acre-feet and the typical crop uses 3 acre-feet per acre.} Some farmers are over-drafting groundwater basins hundreds of feet deep at costs an order of magnitude higher than other farmers. Urban utility prices for residential consumers also show wide dispersion and are another order of magnitude higher than even the most expensive agricultural water. Despite these large potential gains from trade, surface water trade volumes remain incredibly low relative to total volume, as shown in Figure \ref{fig:intro_fig}(b). 
+
+
+% Historically, the primary policy tool has been supply-side augmentation, but worldwide, governments are running out of feasible augmentation projects \citep{wheeler2021introduction}. 
+
+\begin{figure}[htbp]
+  \centering
+\caption{California's Water Price Dispersion and Limited Trade}
+  \subfigure[Water Prices by Use]{
+    \includegraphics[width=0.45\textwidth]{price_densities.pdf}
+  }
+  \hspace{0.05\textwidth} % Adjust the horizontal space between figures
+  \subfigure[Total and Traded Surface Water Volume]{
+    \includegraphics[width=0.45\textwidth]{trade_volumes_by_year.pdf}
+  }
+  \caption*{\footnotesize \textit{Notes:} Panel (a) shows the distribution prices per acre-foot for water from 2005-2015 for agricultural and residential consumers. Agricultural prices are DAUCO-level marginal groundwater costs estimated in Section \label{ag_model}. City prices are reported average unit retail prices. Panel (b) depicts surface water supply and trade in million acre-feet.}
+  \label{fig:intro_fig}
+\end{figure}
+
+
+How does California's surface water misallocation persist? A rich qualitative and budding quantitative literature discusses high transaction costs in surface water markets \citep{Hagerty2023, Hanemann2020, leonard2019expanding,Regnacq2016, Young1986}. In particular, the regulatory process required to approve and manage surface water transfers is often identified as a key bottleneck to flexible reallocation. Since water uses upstream can affect downstream supply, property rights are incomplete, and mismanaged transportation could cause saltwater intrusion, potential water trades must be evaluated to avoid harmful externalities.
+
+\begin{quote}
+The lengthy and involved process at times required for developing, reviewing, and
+approving water transfers is a reflection of their uniqueness and the factual complexity
+and uncertainties that frequently attend them\ldots\ Because of the interconnectedness of
+water rights, water uses, and water supply, much of the time spent in the review of
+water transfers is devoted to determining whether a proposed transfer will adversely
+affect other water users on the stream.
+
+\begin{flushright}
+\textit{``Water Transfer Approval:
+Assuring Responsible Transfers" \\ 
+- California Department of Water Resources (2012)}
+\end{flushright}
+\end{quote}
+
+ While the literature has identified this process as costly, ignoring potential externalities from irresponsible transfers could be prohibitively harmful. Analyses that do not incorporate how surface water transfers can create externalities will overlook real constraints in the system that may require clever market design or infrastructural investment. In this paper, we address surface water’s pervasive externality problem, decompose market frictions, and evaluate various policy proposals to alleviate surface water misallocation.  
+ 
+ We analyze these forces in California’s surface water market, which supports the largest population, agricultural economy, and water market in the United States. By creating a comprehensive panel of California's water economy that includes supply sources, farmer irrigation choices, municipal demand, hydrological externalities, infrastructural constraints, and trade, we study counterfactuals that incorporate the structural details of water management. While we leverage many institutional details unique to California, lessons about the trade-off between streamlined transfers, externality management, and environmental needs are applicable to many other large surface water market.\footnote{Chile, Spain, the Colorado River Basin states, and Australia are all large surface water systems that face the same kinds of frictions and design choices.} 
+
+We first provide a stylized example that demonstrates how the structural interconnectedness of water supply makes surface water transfers susceptible to externalities. Managing these externalities is costly due to informational and infrastructural frictions. Due to incomplete information, surface water rights require \textit{rights verification} to determine available quantity and \textit{externality measurement} to protect downstream supply. Given current infrastructure in \textit{the Delta}, many valuable water transfers are exported out of a delicate ecosystem risking environmental impacts on endangered species and salinity contamination of urban and agricultural supply.  An important perspective and contribution of our paper is directly incorporating these constraints so that policy evaluation does not ignore externalities and overstate gains. 
+
+To demonstrate the impact of informational and infrastructural constraints, we estimate a multinomial logit model of trade shares based on trade characteristics, both with and without structurally estimated gains from trade. Both models show that low trade shares correlate with key frictions: incomplete property rights, potential externalities, and infrastructure limitations. Combined, these frictions' effects are double the coefficient on a thousand dollars of potential gains from trade. However, these estimates don’t distinguish between regulatory constraints and direct transaction costs and aren’t suited for policy or welfare analysis. 
+
+Decomposing the relative magnitudes of these frictions, the impact of structural constraints, and evaluating alternative policies will depend on two empirical objects: willingness-to-pay for surface water and magnitudes of trading constraints. Each pair of potential traders will have potential gains from feasible trade where feasibility will depend on the surface water supply network and the regulatory constraints imposed to manage externalities. We will estimate willingness-to-pay for agricultural agents by observing crop choice and groundwater pumping behavior and for urban agents by estimating residential demand. The set of potential trading agents will be restricted to the hydrological network of rivers and canals. Regulatory constraints will depend on the geographic distribution of kinds of water assets, crop choices, climate, and hydrogeology of transacting partners.
+
+Our agricultural production model focuses on farmers' choices to pump groundwater, change crops, or let land lie fallow in response to surface water shortages. Farmers have the nearly unrestricted option to pump groundwater at a cost.\footnote{Groundwater pumping was largely unregulated until 2014 with the passage of the Sustainable Groundwater Management Act which will not comprehensively regulate pumping until the 2040s.} We find that for every acre-foot reduction in surface water, farmers pump an additional 0.85 acre-feet of groundwater, similar to their response to changes in rainfall. We use regional electricity prices and groundwater depth data to estimate the cost of pumping and apply a multinomial crop choice model to determine agricultural willingness-to-pay for surface water, with groundwater cost variation instrumented by surface water rights. We estimate that the average marginal cost of groundwater pumping in California is \$54 per acre-foot, though it varies significantly, reaching up to \$250 in some areas. This misallocation of surface water by groundwater cost also reflects substantial inefficiency in crop choices, as profits per acre-foot for high-value crops like citrus are four times those of rice. 
+
+We estimate urban water demand with a 2016–2022 panel of utility-level quantities and prices. Many utilities rely on a complex wholesale network for surface water access, with some supply from owned rights or long-term contracts. Using utility-owned supply as an instrument, we find urban demand is inelastic to price, with an elasticity of -0.18 at average prices. Adjusting demand for production costs, we estimate the median urban marginal willingness-to-pay for surface water at \$524 per acre-foot, notably higher than agricultural values.
+
+To decompose the magnitude of different frictions to transaction costs in California's surface water market, we combine our willingness-to-pay models for agriculture and urban sectors with a trade model. We assume bilateral trade occurs with seller-buyer-year-specific marginal costs, linearly parameterized by transfer characteristics. Bilateral pairs trade until all gains are exhausted. Using 2012–2015 trade flows as moments, we estimate transaction costs via simulated method of moments.
+
+There are four key results. First, we find that transaction costs associated with measuring externalities are about \$40/acre-foot. While this friction is nearly 80\% of the average agricultural willingness-to-pay for water and can make up about a fifth of trade frictions between farmers, removing this friction, even in years of severe drought, only produces annual gains in agricultural allocative surplus of \$15 million. Furthermore, policies that could feasibly eliminate this transaction cost with no-information lower bounds do not noticeably outperform baseline market performance. We view this as an important negative result for water policy design. While there is a strong emphasis on reducing the transaction costs associated with evaluating trade externalities, our findings suggest that there is limited scope for improvement. 
+
+Second, if California implements infrastructural investment and constructs the Delta conveyance project, which will eliminate hydrological constraints on trade across the Delta, agricultural surplus will increase by \$104.6 million on average in dry years - equivalent to 3\% of agricultural profits. Cities only see benefits of \$2 million from this policy proposal. While gains are large for agriculture and should be considered in the cost-benefit analysis of Delta pipeline construction, these gains alone cannot justify the anticipated construction cost of \$20 billion. 
+
+Third, the frictions associated with trading incomplete surface water rights that are not digitized and have unmeasured quantity guarantees are quite large at \$404/acre-foot. Combining the Delta conveyance project with policies that streamline information about rights through digitization and continuous measurement could increase agricultural profits by 10\% in dry years. Furthermore, a counterfactual that does not require return flow measurement could insure no downstream externalities, achieve most of the market gains, and provide an additional 100 thousand acre feet for environmental uses. 
+
+Fourth, none of the previously mentioned interventions resolve the large gap in willingness-to-pay between farmers and cities. We estimate that residual frictions  associated with transfers where buyers are urban utilities are around \$2500/acre-foot. Eliminating this friction alone produces more value than the combination of previous interventions and if each of these frictions can be eliminated, dry years will see statewide gains of \$600 million that benefit both farmers and cities equally. Although our analysis doesn’t pinpoint specific mechanisms, supply-chain barriers, repugnance to urban transfers, and political factors likely play roles, highlighting key areas for future research. 
+
+Our results emphasize the importance of incorporating buyer-seller specific transaction costs and gains from trade subject to hydrological constraints. The structural results suggest a new agenda for water market design beyond what previous research indicated. Administrative costs associated with third-party and environmental externalities are non-trivial, but will not close the largest gaps in value for water in California. Un-clarified, poorly measured, and un-digitized water rights are a significant friction to market performance. Discovering and resolving other frictions for urban buyers may provide the most impactful solutions to market failure in California.
+
+\textbf{Related Literature: } This paper primarily contributes to several literatures in resource and agricultural economics. First, a large literature estimates models of crop choice \citep{carpentier2015economic, carpentier2014multicrop, scott2014dynamic, Rafey2023}, agricultural demand for groundwater \citep{burlig2024groundwater, ryan2022rationing, timmins2002measuring}, and residential demand from water utilities \citep{arbus2023estimation, worthington2008empirical,timmins2002measuring}. We contribute new willingness-to-pay and elasticity estimates that are in line with current estimates. We expand this literature by developing an agricultural production model that incorporates substitution between surface and groundwater. Our model is concise and allows for new evaluation of surface water policies that cannot be done without incorporating this interaction.
+
+Second, we contribute to an active literature on quantitative estimates of frictions and gains in water marketing \citep{Colby1990, donna2018illiquidity, gupta2018model, vaux2018managing, Rafey2023}. In particular, two papers on California's water market laid the groundwork for much of our work. \cite{Regnacq2016} apply a trade model to estimate how different trade characteristics affect water trade flows using a similar dataset.\footnote{I am grateful to Ellen Hanak for sharing this data.} Their results align closely with our multinomial logit trade share regression, though we go further by integrating a structural willingness-to-pay model, specific hydrological constraints, dollar-denominated transaction costs, and counterfactual analysis. The most comparable work to ours is \cite{Hagerty2023}, which estimates and decomposes transaction costs in California’s water market. We contribute by expanding the set of potential traders to regions that may have never traded, incorporating externalities and hydrological constraints, evaluating market impacts on crop choice and groundwater pumping, and considering realistic policy proposals to reduce these transaction costs.
+
+Lastly, we contribute to a growing literature on empirical environmental market design and industrial organization \citep{russo2024additionality, aronoff2023conservation, teytelboym2019natural}. \cite{ferguson2024market} highlight that the interaction of transaction costs with externalities is a crucial decision in many externality riddled resource problems. This paper provides an empirical analysis of this relationship in California's water market and motivates further work on optimal property rights frameworks and market design for interdependent resources.  
+
+\section{Institutional Background}
+
+\subsection{Water in California}
+
+In this section, we describe the physical endowment and infrastructure for water in California, the system of property and usage rights for water in California, and provide a stylized example how these features give rise to specific transaction costs and frictions in trading water.
+
+Water in California supports the largest population and state agricultural economy in the United States. Total surface water use averaged 18.2 maf from 2005 to 2015. The majority comes from snowpack runoff that falls within the state.\footnote{Intrastate supply is supplemented with 4.4 maf of Colorado River imports. Colorado River water is imported from the Colorado River Aqueduct and All-American canals depicted in Figure \ref{fig:calsystem} extending from the most eastern points of the state into Southern California.} In Figure \ref{fig:calsystem}(a) we map all rivers in the state with average annual flow over 10 taf and indicate average volumes. There is a structural misallocation of surface water in California where two-thirds of water supply is in the north whereas two-thirds of the demand is in the south (PPIC 2021). Because of this, there has been massive State, Federal, and local investment in canal infrastructure, which we depict in Figure \ref{fig:calsystem}(a), endowing California with one of the most advanced and interconnected water distribution systems in the world. 
+
+In Figure \ref{fig:calsystem}(b), we focus attention on the most important rivers and canals in the system. The Sacramento River, beginning in the north, and San Joaquin River, beginning in the east, meet at the Sacramento-San Joaquin Delta in the middle of the state, just northeast of the San Francisco Bay. There are two major \textit{projects}: the State Water Project (SWP) and the federally managed Central Valley Project (CVP). These water projects pool together rights to divert surface water and create a new water asset managed within project boundaries which is distributed to project contractors. SWP contractors are largely urban wholesalers and utilities whereas CVP contractors are largely agricultural irrigation districts and farmers. The largest SWP and CVP canals export 1.5-6.7 maf annually out of the Delta through the California Aqueduct, Delta-Mendota Canal, and various other routes (PPIC 2022). 
+
+The Delta is the critical nexus in California's water system where abundant flowing surface water supply meets project infrastructure which supplies 35\% of statewide surface water use. Absent man-made diversion, 40\% of the State's natural surface runoff flows through the Sacramento and San Joaquin rivers, into the Delta, and then out into the San Francisco Bay. The Delta is where the Bay's saltwater meets freshwater outflow. If freshwater runoff into the Delta is too low or project exports are too high, more saltwater is drawn into the Delta threatening endangered species, managed wetlands, local supply, and all urban and agricultural exports.\footnote{There are additional restrictions on project exports to protect fish species that would be killed during the pumping process (PPIC 2022).} A salinity incident in the Delta would be a catastrophic water policy failure for the environment and for developed supply. Accordingly, there are many constraints and regulations for any water transferred across the Delta. 
+
+\begin{figure}[H]
+  \centering
+\caption{California Surface Water System}
+  \subfigure[All Rivers and Large Canals]{
+    \includegraphics[width=0.45\textwidth]{figures/all_rivers_w_canals.pdf}
+  }
+  \hspace{0.05\textwidth} % Adjust the horizontal space between figures
+  \subfigure[Key Rivers and Project Canals]{
+    \includegraphics[width=0.45\textwidth]{figures/delta_highlight_rivers_canals.pdf}\textbf{}
+  }
+  \caption*{\footnotesize \textit{Notes:} Panel (a) depicts all streams and major canals in California and indicates average annual flows from 1970-2000 using data from NHD Streamflow V2. Panel (b) highlights the Sacramento and San Joaquin Rivers, the major State Water Project and Central Valley Project canals, and the confluence at the Delta. }\label{fig:calsystem}
+  
+\end{figure}
+
+To manage this large, interconnected, and volatile system, California allocates usufructuary property rights to divert surface water directly from rivers.\footnote{Usufructuary rights are rights to \textit{use} the resource, but not rights to \textit{own}. Since water is a flowing and changing resource, it is much different than land where ownership to physical property is clear and more readily enforceable. No right holder owns particular molecules of water, but instead owns a right to use water according to particular rules \citep{thompson2013legal}.}\footnote{There are both riparian and appropriative property rights in California, along with other unique water right types. For this paper, we mean appropriative property rights when we mention surface water rights as these make up the great majority of water usage in the state and are the only water asset which is has an organized process and clear legal right to transfer \citep{thompson2013legal}.} Right holders are entitled to a maximum annual quantity in order of seniority - determined by the date in which diversion started. Diversion rights are \textit{incomplete} property rights which do not explicitly clarify all the necessary information for responsible water management. Surface water right specify seniority date, maximum annual volume, maximum rate of diversion, point of diversion,  place of use and purpose of use.\footnote{These details are right specific and cannot be changed without administrative approval, yielding a highly heterogeneous set of commodities.} Rights \textit{do not} explicitly specify the annual quantity users are entitled to or the degree to which the user contributes to downstream supply. 
+
+A key feature of surface water management is that a single molecule of water can be diverted by many users before being lost to evaporation or transpiration \citep{Young1986}. For example, when a farmer diverts water from a stream to irrigate fields of grain, any water not evapotranspirated\footnote{Evapotranspiration is the joint process by which water evaporates and is transpirated by plants.} can enter the watercourse downstream as \textit{return flow} either through runoff or groundwater percolation \citep{Chong2006}. A user downstream may then again divert that same water. While a right holder's annual quantity and contribution to downstream is important information for managing the system, these details are not listed ex ante, and instead are implicitly computed at a cost when water transfers are proposed. Irresponsible management of transfers that does not address quantity uncertainty and downstream supply contribution could end up harming other users in the system or contribute to salinity concerns in the Delta. 
+
+
+\begin{figure}[htbp]
+  \centering
+    \caption{Example of Return Flow Dependence and Trade}
+  \subfigure[Baseline Allocation]{
+  \resizebox{0.45\textwidth}{!}{
+        \begin{tikzpicture}
+        % Stream (visible)
+         \node at (-1,1) {\includegraphics[width=1.5cm]{delta.pdf}};  
+
+        % Stream (visible)
+        \draw[-latex, blue, thick, line width=3pt] (0,6.25) to[in=0, out =260] (-3,0);
+        \node[above] at (0,6.25) {64};
+
+        \node at (2.5,5) {\includegraphics[width=1.5cm]{farmer_graphic.pdf}}; % Use 'farmer_graphic.pdf' for the first node
+        \node[below] at (2.5,4.5) {Alice ID}; % Label for the first node
+        \draw[-latex, black, thick] (0,5.25) -- (1.5,5.25); % Arrow to the first node
+        \node[above] at (0.75,5.25) {48};
+        
+        
+         \draw[-latex, red, thick, line width=3pt] (-1,1) to[in=180, out =270] (2,0);
+        
+        \node[above, red] at (1,0.2) {16};
+
+         \node at (3.2,0.5) {\includegraphics[width=1.5cm]{city_graphic.pdf}};   
+         \node[below] at (3.2,0) {Charlie City};
+
+          \node[above, black] at (-2.75,0.1) {16};
+          \node at (-3.85,-0.3) {\includegraphics[width=1.5cm]{enviro_graphic.pdf}};
+
+           \draw[-latex, green, thick] (1.5,4.75) -- (0,4);
+           \node[below, green] at (0.9,4.4) {16};
+
+          \draw[thick, blue] (-1.5, 2.5) -- (0, 2.5);
+          \node[right, blue] at (0.1, 2.5) {32};
+    \end{tikzpicture}}} % Adjust the horizontal space between figures
+  \subfigure[Transfer Externality]{
+  \resizebox{0.45\textwidth}{!}{
+    \begin{tikzpicture}
+        % Stream (visible)
+                 \node at (-1,1) {\includegraphics[width=1.5cm]{delta.pdf}};  
+
+        \draw[-latex, blue, thick, line width=3pt] (0,6.25) to[in=0, out =260] (-3,0);
+        \node[above] at (0,6.25) {64};
+
+        \node at (2.5,5) {\includegraphics[width=1.5cm]{farmer_graphic.pdf}}; % Use 'farmer_graphic.pdf' for the first node
+        \node[below] at (2.5,4.5) {Alice ID}; % Label for the first node
+        \draw[-latex, black, thick] (0,5.25) -- (1.5,5.25); % Arrow to the first node
+        \node[above] at (0.75,5.25) {39};
+        
+        
+         \draw[-latex, red, thick, line width=3pt] (-1,1) to[in=180, out =270] (2,0);
+        
+        \node[above, red] at (1,0.2) {25};
+
+         \node at (3.2,0.5) {\includegraphics[width=1.5cm]{city_graphic.pdf}};   
+         \node[below] at (3.2,0) {Charlie City};
+
+                \node[above, primaryred] at (-2.75,0.1) {\xcancel{16}};
+       \node[above, black] at (-2.25,0.1) {13};
+          \node at (-3.85,-0.3) {\includegraphics[width=1.5cm]{enviro_graphic.pdf}};
+
+           \draw[-latex, green, thick] (1.5,4.75) -- (0,4);
+           \node[below, green] at (0.9,4.4) {13};
+
+          \draw[thick, blue] (-1.5, 2.5) -- (0, 2.5);
+          \node[right, blue] at (0.1, 2.5) {38};
+    \end{tikzpicture}
+  } }\label{fig:style_example}
+  \caption*{\footnotesize \textit{Notes:} Figure presents a stylized example of return flow contributions to supply and potential externalities from surface water transfers. Panel (a) shows a representative baseline example. Diversions are in black and return flow contributions are in green. Panel (b) depicts the consequences of a trade of 9taf from Alice to Charlie that does not properly incorporate return flow dependence. }
+ 
+\end{figure}
+
+We present a stylized example to demonstrate how transfers can cause third-party externalities and what steps the State takes to responsibly manage transfers. In Figure \ref{fig:style_example}(a), we show a stream that sees 64 thousand acre-feet (taf) of surface water annually. There are three users along the stream. Annually, Alice Irrigation District diverts 48 taf, Charlie City diverts 16 taf, and as water crosses through the Delta into the ocean an additional 16 taf provides vital ecosystem services that mediate saltwater intrusion and sustain endangered fish species. 
+
+
+In total, there are 3 claims totaling 80 taf along the stream which is more than the 64 taf the will flow through the stream. These claims depend on return flow. When Alice applies 48 taf to her crops, she consumes 2/3 through evapotranspiration and 6 taf becomes return flow. Alice's \textit{consumptive use} varies depending on the type of crops, irrigation technology, and hydrogeology. Charlie City exports water out of the Delta and returns nothing to the originating stream system.\footnote{Some cities contribute return flow as well.} 
+
+Suppose that Charlie City has a much higher value for water than Alice and they agree to trade 9 taf. In Figure \ref{fig:style_example}(b), we show how this transfer induces negative externalities on the environment. Alice, now only applying 39 taf, returns only 13 taf downstream and Charlie diverts 25 taf. Accounting for Alice and Charlie's consumptive share, there is only 38 taf available in the stream after their uses. The environmental flows are reduced to 13 taf because of the change in Alice's return flow. Without careful management, mutually beneficial trade between Alice and Charlie exerted a negative externality on the environment.\footnote{These externalities can also impact other users along the stream. Typically, right holders will not be aware of reduced supply and so the most downstream return flow dependence will face the burden.} Furthermore, as Charlie diverts more surface water he draws additional saltwater into the Delta and could harm endangered fish species. Due to these externalities, California takes the following three steps to manage surface water transfers. 
+
+\textbf{Rights Verification: } First, the seller must prove that they have a right to surface water that year and verify the quantity available given drought conditions. In Appendix Figure \ref{fig:water_right} we show a real example of an appropriative right to surface water, which exists on paper but is not digitized or streamlined in a database. The right outlines the maximum quantity of water the user can divert and where it can be used. However, there is not information about how the right adjusts to different years and users are expected to adjust diversion while respecting the rights of other users, which are also un-digitized. In our stylized example, this would amount Alice ID presenting her right to surface water and determining if at least 9 taf are available for transfer. Regulators dedicate much of their time and resources to verifying the quantity endowed by the right for the given year. 
+
+\textbf{Return Flow Measurement: } Once the quantity the seller has a right to divert is determined, a return flow measurement is performed to determine the consumptive use of the seller. Sellers are required to present the last five years of crop production and irrigation practices and regulators use agronomic models and measurements to determine the seller's anticipated reduction in consumptive use. The buyer is then restricted to diverting at most the consumptive reduction of the seller, so that return flow externalities are internalized. This would amount to Charlie City diverting 6 taf, since Alice consumes 2/3 of her diversion and plans to leave 9 taf in the stream. Since Charlie can only divert 6 taf, the 38 taf left in the stream is enough to satisfy both Charlie's diversion and the environmental outflow. 
+
+\textbf{Delta Constraints: } To avoid saltwater intrusion, protect endangered ecosystems, and ensure the quality of project exports, any transfer that will cross the Delta must leave additional water - called \textit{carriage water} - in the system as Delta outflow. On average, carriage water amounts to 22\% of water made available by the seller. In our example, this means that Charlie City must leave 22\% of the 6 taf from Alice as Delta outflow. Ultimately, Charlie City will only be able to export 4.68 taf out of the Delta. If Charlie was not pumping water directly out of the Delta, these carriage water requirements would not be necessary. Currently, California is considering the construction of the Delta Conveyance Project -  a pipeline that would avoid the Delta by diverting water from upstream in the Sacramento River and transporting directly to the south of Delta. 
+
+Each of these three steps impose transaction costs on transfers, but are important given incomplete information about property rights and existing infrastructure that requires pumping directly out of the Delta. This process, along with others, is cited as a bottleneck in water marketing \citep{Leonard2019}.
+
+
+Existing quantitative analyses of surface water market frictions have identified these three regulatory steps as predictive of reduced trade volumes \citep{Regnacq2016, Hagerty2023}. However, the previous literature has not directly controlled for the way these steps reduce tradeable quantities. Both the return flow adjustments and carriage water requirements in the Delta act as a wedge between the seller's reduction and the buyer's increased diversion - the potential gains from trade must be large enough to still rationalize trade. We contribute new analysis and results that allows us to differentiate between structural constraints created by these frictions as opposed to the administrative costs associated with management. Being able to distinguish between these forces allow us to consider and propose specific policies that will resolve frictions. 
+
+Policy variation in when each of these three regulatory steps are required allows us to identify frictions separately. Rights verification is required whenever seller's are trading an underlying right to surface water. When the seller is trading project water, there is not need to perform a rights verification as project water entitlements are  clearly listed online and update given drought conditions. Return flow measurement is required for both the trade of rights, and also the export of project water out of project boundaries. Since return flow externalities are only relevant when the underlying property right changes, project water transfers within project do not require return flow measurement. However, any export of project water out of project boundaries will change the place of use of the underlying water light, and a return flow measurement is required. Lastly, any type of water asset may be liable to carriage water requirements when crossing the Delta. 
+
+The first two steps, rights verification and return flow measurement, are informational frictions in the market where incomplete property rights require costly verification. We will consider counterfactuals where information is free, through rights adjudication or satellite measurement, and also no-information counterfactuals where conservative lower-bounds on consumptive share are used instead of determining consumptive use specifically for each proposed seller. Delta constraints, on the other hand, are infrastructural frictions that could be resolved with the construction of the Delta conveyance project, which is a counterfactual we will consider. 
+
+Of course, there are many other frictions in surface water markets. Water is heavy and requires energy to transport great distances. Furthermore, potential trading partners that are far away from each other may be subject to larger search costs. We will address these concerns by incorporating the distance between traders in our market. Another known friction in surface water markets has to do with the political economy of water transfers. Given a fraught history of large transfers (e.g. the \textit{water wars} between Los Angeles and Owens Valley) from agriculture to urban limiting the economic success of the local community that exported the water, there is strong resistance to these kinds of transfers in California. Concern about distributional consequences of trade - pecuniary externalities - are not just a general concern, but California regulators are actually granted the authority to block or modify transfers that unduly harm the exporting local economy. There is limited guidance on how regulators should approach this friction or how strong this sentiment is across different regions, so we do not try to explicitly disentangle what motivates this friction in this paper.\footnote{In other work, Ferguson and Kashner (2024) estimate the size of these pecuniary externalities in Australia's Murray-Darling Basin and consider market designs that can compensate exporting communities so that Pareto gains are made.} 
+
+
+\section{Data}
+
+We combine land and water use data provided by California's Department of Water Resources (DWR), the State Water Resources Control Board (SWRCB), and the Public Policy Institute of California (PPIC) to create a panel for urban, agricultural, and environmental water uses and trade from 2005-2015.
+
+\subsection{Data sources}
+
+\noindent \textit{Crops and Irrigation.} The DWR provides a panel of land and water used for 19 different crop categories from 2002-2019 at the Detailed Analysis Unit by County (DAUCO) level. There are 281 DAUCOs in California, which have agricultural production tracked by DWR. For each DAUCO-crop-year, the data include acres grown, applied water per acre, effective rain per acre, and evapotranspiration of applied water per acre. Given DAUCO specific soil, climate, and topology, DWR estimates the quantity of water that must be evapotranspirated to maximize yield for each crop and year. Evapotranspirative needs not met by effective rain make up the quantity that must be met with irrigation. Given irrigation efficiency estimates, the DWR reports how much water must be applied to reach target evapotranspiration levels. \\
+
+\noindent \textit{Water Supply and Hydrological Balance.} To meet regulatory obligations in the California Water Code, DWR must release the California Water Plan which frames and informs water policy. To carry out the analysis, the DWR builds large-scale hydrological models to study counterfactual water policies and climactic scenarios. The DWR Water Balance data provides DAUCO-year-use level estimates of many key variables output by their hydrological models. The three uses are: urban, agricultural, and environmental. The data breakdown sources of water use into water rights, project water, groundwater, and return flow dependence. Environmental water use is broken down between wild and scenic rivers, in-stream flow requirements, and Delta outflow requirements. We will use this data to estimate sources of water supply and construct a network of return flow externalities. \\
+
+\noindent \textit{Hydrological Network.} The U.S. EPA Office of Water manages the National Hydrography Dataset (NHD) that provides information about streamflow and hydrological connectivity across the entire United States. Using version NHDPlusV2 for  California, we construct a model of the river network between each DAUCO. While the NHD dataset includes microdata on natural river interconnectedness, artificial infrastructure like canals or aqueducts are not as clear. We compile three different datasets from state and federal source that include cross-regional canals and aqueducts. Additionally, we supplement the artificial infrastructure using urban water district and irrigation district shapefiles which have intra-district infrastructure. We combine cross-regional canal infrastructure with intra-district connectivity to create the network of conveyance between DAUCOs.  In Appendix Section \ref{appendix_networks}, we detail how these networks are constructed.  \\
+
+\noindent \textit{Groundwater Basins and Pumping.} The DWR releases an unbalanced panel of measurements from 43,659 groundwater pumps in the state covering 515 basins from 1888-2023. We observe the depth to groundwater and the surface area of the basin. For some basins we observe groundwater depth at in monthly intervals and for other we only see yearly data. Appendix Section \ref{appendix_gw_data} discusses how we clean the data to create a panel of groundwater levels at the DAUCO-year level from 2002-2019. To gather electricity prices and groundwater pumping energy-need data we scrape results from a California Energy Commission report on regional groundwater energy-use. The report allows us to create a panel from 2005-2015 of agricultural energy prices and energy use at the hyrdrologic regional level. \\
+
+\noindent \textit{Urban Water Utilities.} From 2016-2022, residential water utilities reported operations data to the DWR as a part of an audit with the American Water Works Association (AWWA). The panel includes for 238 utilities, a breakdown of water sources, total quantity provided, number of households provided, average unit price for water, variable cost, and total cost of operations. This data forms the backbone of our urban water demand estimation. \\
+
+\noindent \textit{Surface Water Transfers.} The Public Policy Institute of California (PPIC) manages a panel from 1982-2019 of water transfers in California. Since there does not exist a single agency or dataset that tracks all types of water transfers in California, the PPIC compiles data from various sources to create the most comprehensive and detailed dataset available. Sources include the State Water Project (SWP), Klamath Project, Central Valley Project (CVP), Colorado River project, National Environmental Policy Act (NEPA) documentation, State Water Resources Control Board (SWRCB) Temporary Transfers, major water districts, and individually investigated transfers. The panel identifies buyers and sellers, the type of water being transferred, quantity transferred, Delta carriage water adjustments, whether the trading agents are agricultural or urban, and the length of transfers (if long-term). The data, however, do not include prices. We supplement with a proprietary panel dataset from 2010-2021 from WestWater Research that includes prices and quantities, but only identifies the regions of buyers and sellers. \\
+
+\noindent \textit{Other Supplementary Data.} Some analysis requires ancillary data to describe characteristics of particular agents. We collect tract-level median income from Census data, household lot size from Infutor, and precipidation data from PRISM. Each is aggregated either to the DAUCO or utility level using geographic shapefiles provided by DWR or from Nick Hagerty's water rights database (Hagery 2023). We also utilitze Hagerty's DAUCO-aggregated panel of project allocations. 
+
+
+\subsection{Water Supply and Uses}
+
+Surface water availability in California varies considerably across years. In Table 1 we show the breakdown of surface water uses (agricultural, urban, and environmental) across years. On average, half of total surface water runoff is put to environmental uses. This includes in-stream flow requirements, managed wetlands, wild and scenic rivers, and required Delta outflow. Each particular use helps maintain natural ecosystems, sustain endangered species, and preserve protected rivers or areas. Beyond these explicitly environmental uses, both in-stream flow and Delta outflow requirements are necessary to preserve both agricultural and urban supply from degradation. Without sufficient in-stream flows or Delta outflow, the remaining half of surface water uses could be rendered unusable. As total surface water supplies decrease, environmental flows take the largest cut. The remaining half is split about 4:1 between agricultural and municipal uses. 
+
+We categorize \textit{Wet}, \textit{Dry}, and \textit{Normal} years by the upper quartile, lower quartile, and inter-quartile of annual statewide surface water availability. In Table \ref{water_summary} we report more detailed water use and supply statistics at the level of our respective units of analysis. Agricultural, urban, and environmental units are at the DAUCO, utiliy, and statewide level, respectively. Within each use and type of water year (Dry, Normal, or Wet) we report the 10th, median, and 90th percentile unit's statistic. There are 281 agricultural DAUCO units, 238 urban utilities, and 1 statewide environmental unit which we observe from 2002 to 2019.\footnote{The AWWA utility audit data only includes years 2016-2022. We combine this data with urban supply data from the DWR water balance data to create a panel from 2002 to 2019.} 
+
+\subsubsection{Agricultural Use and Supply}
+
+The median DAUCO has 142,000 acres of potential farmland and irrigates with around 425,000 af. In Dry years, the median DAUCO leaves 16\% of this land fallow. While surface water is more scarce in Dry years, fallowing statistics seem to be relatively constant. This is because there is substantial substitution to groundwater pumping when surface water supplies are scarce. From Wet to Dry years, median surface water availability decreases by 112 taf and median groundwater pumping increases by 81.6 taf.
+
+Groundwater pumping in California has been largely unregulated and has acted as the outside option for water starved farmers. The cost of groundwater pumping to the farmer depends critically on the depth to groundwater - how far water must be pumped. Dry years see the highest depths and there is substantial variation across DAUCOs. In Figure \ref{fig:sidebyside}, we map average surface water use (in Panel A) and groundwater depth (in Panel B) across DAUCOs. Notably, surface water resources are found largey north of the Delta, and south of the Delta groundwater is pumped at the highest depths. Since groundwater cost is directly related to depth, this descriptive evidence already provides suggestive evidence of gains from trade between farmers with surface water and farmers that must pay more to pump groundwater farther. 
+
+\begin{figure}[htbp]
+  \centering
+\caption{DAUCO Agricultural Surface Water Use and Groundwater Depth}
+  \subfigure[Surface Water Use]{
+    \includegraphics[width=0.45\textwidth]{figures/sw_ca.pdf}
+  }
+  \hspace{0.05\textwidth} % Adjust the horizontal space between figures
+  \subfigure[Depth to Groundwater]{
+    \includegraphics[width=0.45\textwidth]{figures/depth_ca.pdf}
+  }
+  \caption*{\footnotesize \textit{Notes:} Both panels use DAUCO-level averages from 2005-2015. Panel (a) shows the average agricultural surface water use in thousand acre-feet (taf). Panel (b) depicts the average depth (in feet) to groundwater.}
+  \label{fig:sidebyside}
+\end{figure}
+
+Return flow supply and dependence is clustered around a smaller set of DAUCOs. In all levels of scarcity, the median DAUCO supplies/depends on little return flow. However, 90th percentile DAUCOs in Dry and Wet years provide 34.1 taf and 64.3 taf respectively. For perspective, that means that nearly 30 DAUCOs each return at least half a million people's worth of water to the system in Wet years. Between a half and two-thirds of this return flow is re-used by farmers in other DAUCOs. 
+
+\begin{table}[H]
+\centering
+\caption{California Water Use and Supply Summary}\label{water_summary}
+\resizebox{0.8\textwidth}{!}{
+\begin{tabular}{lccccccccc}
+  \hline
+  \hline
+ &  & Dry &  &  & Normal &  &  & Wet &  \\ 
+   & p10 & p50 & p90 & p10 & p50 & p90 & p10 & p50 & p90 \\ 
+   \hline
+  \textit{Agriculture} &  &  &  &  &  &  &  &  &  \\ 
+  Farmland (Thousand Acres) & 27.4 & 142 & 476 & 27.5 & 142 & 476 & 27.1 & 142 & 476 \\ 
+  Share Fallowed & 0.03 & 0.16 & 0.31 & 0.02 & 0.11 & 0.3 & 0.03 & 0.13 & 0.32 \\ 
+  Total Irrigation (TAF) & 72.2 & 454 & 1250 & 68.5 & 418 & 1190 & 71.8 & 413 & 1210 \\ 
+  AF/Acre & 2.68 & 3.57 & 4.88 & 2.5 & 3.31 & 4.6 & 2.64 & 3.51 & 4.78 \\ 
+  Consumptive Share & 0.73 & 0.84 & 0.91 & 0.67 & 0.77 & 0.89 & 0.65 & 0.7 & 0.76 \\ 
+  Surface Water (TAF) & 6.4 & 116 & 499 & 10.6 & 216 & 736 & 15 & 228 & 798 \\ 
+  SW Share Project & 0 & 0.09 & 1 & 0 & 0.09 & 0.95 & 0 & 0.05 & 0.97 \\ 
+  Groundwater (TAF) & 0 & 166 & 905 & 0 & 95.8 & 496 & 0 & 84.4 & 431 \\ 
+  GW Depth (ft) & 22.6 & 82.4 & 281 & 16.2 & 66.1 & 235 & 11.8 & 56.3 & 148 \\ 
+  Return Flow Supply (TAF) & 0 & 0.2 & 34.1 & 0 & 0.8 & 55.9 & 0 & 1.65 & 64.3 \\ 
+  Return Flow Demand (TAF) & 0 & 0 & 23.8 & 0 & 0 & 40.4 & 0 & 0.1 & 31.4 \\ 
+   &  &  &  &  &  &  &  &  &  \\ 
+  \textit{Urban} &  &  &  &  &  &  &  &  &  \\ 
+  AF/Service Connection & 0.47 & 0.61 & 0.91 & 0.48 & 0.63 & 0.94 & 0.55 & 0.71 & 1.15 \\ 
+  Surface Water (TAF) & 0.94 & 3.4 & 6.2 & 0.66 & 3.38 & 7.4 & 0.84 & 3.74 & 7.04 \\ 
+  SW Share Project & 0.07 & 0.57 & 0.86 & 0.27 & 0.53 & 0.88 & 0.36 & 0.59 & 0.84 \\ 
+  Groundwater (TAF) & 1.21 & 6.96 & 35.1 & 2.33 & 8 & 38 & 3.37 & 7.98 & 47.5 \\ 
+  Return Flow Supply (TAF) & 0 & 0 & 5.19 & 0 & 0 & 6.73 & 0 & 0 & 7.13 \\ 
+  Return Flow Demand (TAF) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\ 
+   &  &  &  &  &  &  &  &  &  \\ 
+  \textit{Environment} &  &  &  &  &  &  &  &  &  \\ 
+  Instream Flow (Total TAF) & 232 & 389 & 504 & 274 & 549 & 1000 & 181 & 380 & 791 \\ 
+  Instream Flow (RF TAF) & 50.6 & 68.9 & 79.6 & 71.2 & 94 & 165 & 133 & 155 & 167 \\ 
+  Wild and Scenic  (Total TAF) & 13 & 16 & 24.4 & 0 & 42 & 174 & 0 & 54.7 & 700 \\ 
+  Wild and Scenic  (RF TAF) & 1.93 & 2.92 & 3.55 & 2.24 & 3.14 & 11.8 & 7.25 & 9.46 & 11.5 \\ 
+  Managed Wetlands (Total TAF) & 98.9 & 149 & 160 & 125 & 145 & 177 & 88.5 & 152 & 179 \\ 
+  Managed Wetlands (RF TAF) & 63.4 & 70.3 & 79.4 & 62.9 & 91.6 & 103 & 64.2 & 75.3 & 81.2 \\ 
+  Delta Outflow (Total TAF) & 3420 & 3750 & 4250 & 3210 & 4460 & 5510 & 1810 & 2930 & 4640 \\ 
+  Delta Outflow (RF TAF) & 869 & 1190 & 1500 & 1280 & 1810 & 2120 & 1870 & 1930 & 1960 \\ 
+   \hline
+\end{tabular}
+}
+\vspace{5pt}
+\caption*{\textit{Notes: } Table reports summary statistics about surface water trade in California from 2005-2015. Years are considered \textit{Normal} within the inter-quartile range of total statewide surface water volume, with \textit{Dry} and \textit{Wet} below and above this range. Within each type of year, the 10th, median, and 90th percentiles across units for the listed statistic are reported. Agricultural are DAUCOs, Urban units are water utilities, and Environmental units are years. }\label{water_summary}
+\end{table}
+
+\subsubsection{Urban Use and Supply}
+
+The median utility has 43,167 service connections and supplies 0.63 af in a Normal year. This median water supply per service connections varies between  0.61 and 0.71 from Dry to Wet years. The impact of surface water scarcity on urban utilities creates more variability as senior water rights are largely held by agricultural users and urban utilities often overly adjudicated groundwater basins which are more regulated and cannot act as an always available outside option. Per connection supply and the composition of sources from surface water, project water, and groundwater vary widely between utilities. In particular, project water dependence is much greater amongst utilities than agriculture. The median utility receives half of their supply from projects, compared to only 10\% amongst DAUCO agricultural use. On the other hand, return flow contributions and dependence are much less prevalent amongst utilities.\footnote{However, recall that ``environmental'' dependence in the Delta sustains project supply to urban users.} 
+
+
+
+
+\subsubsection{Environmental Use and Supply}
+
+In a median year, statewide instream flow, wild and scenic, managed wetlands, and Delta outflow requirements are 549 taf, 42 taf, 145 taf, and 4,460 taf respectively. Delta outflow needs are more than 5 times the other uses combined. Furthermore, the Delta's needs persist in Dry years and are especially dependent on return flows. On average, over 40\% of environmental water use is sustained by agricultural and urban return flows. When water users engage in trade, this dependence must be evaluated to insure there is no harm. 
+
+
+\subsubsection{Return flow dependence and externalities}
+
+\begin{figure}[htbp]
+  \centering
+  \caption{Return Flow Contributions and Dependence}
+  \subfigure[Contributions to Return Flow]{
+    \includegraphics[width=0.45\textwidth]{figures/log_rf_cont_map.pdf}
+  }
+  \hspace{0.05\textwidth} % Adjust the horizontal space between figures
+  \subfigure[Dependence on Return Flow]{
+    \includegraphics[width=0.45\textwidth]{figures/log_rf_dep_map.pdf}
+  }
+  \caption*{\footnotesize \textit{Notes:} Panels (a) and (b) depict the logged average return flow contributions and dependence of each DAUCO from 2005-2015. }
+  \label{fig:rf_cont_dep}
+\end{figure}
+
+Understanding the nature of return flow dependence is crucial to responsibly managing water resources \citep{anderson2012water}. In California's case, since return flow dependence is largely concentrated in the Delta, mistakes in return flow management could destroy protected habitats, kill endangered species, or render statewide water supplies to saline for use. Unfortunately, detailed information on how specific changes in water use will return flow availability for third-parties is scarce. A key contribution of this paper is estimating and incorporating the details of this return flow dependence into the evaluation of different water market designs. 
+
+As detailed in Appendix Section \ref{appendix_gw_data}, we estimate a return flow network between DAUCO-uses from aggregate data on DAUCO water dependence provided in the DWR water balance data. In Appendix Figure \ref{fig:networks}, we depict the directed network of return flow dependence between DAUCOs in California. Most of the complicated interconnectedness is concentrated in and around the Delta. In Figure \ref{fig:rf_cont_dep} we map average agricultural and urban return flow contributions and total return flow dependence across the state. Most of the contributions and dependence cluster along the Sacramento and San Joaquin Rivers, which flow into the Delta. 
+
+This network will allow us to analyze counterfactuals where we tradeoff costly return flow monitoring with re-allocative flexibility and potential return flow externalites. To our knowledge, this is the first economics paper to take return flow contributions and dependence seriously as a constraint for water market design. 
+
+\begin{figure}[htbp]
+  \centering
+    \caption{Trade Volumes and Total Surface Water by Year}
+    \includegraphics[width=\textwidth]{figures/trade_volumes_by_year.pdf}
+    \caption*{\footnotesize \textit{Notes}: The x-axis is the year of observation. The y-axis depicts volume in million acre-feet (MAF). In blue is the total volume of surface water put to use. In green is the total volume of surface water traded.}
+  \label{fig:trade_vol}
+\end{figure}
+
+\subsubsection{Water Market Activity}
+
+
+Using the panel of water transfers provided by the PPIC from 2002-2019, we depict trade volumes relative to total surface water volume in Figure \ref{fig:trade_vol} and report in Table \ref{market_summary} summary statistics trades across different degrees of scarcity and then report the shares of trade volume that are a part of water transfers with particular characteristics. The kinds of variation in trade activity across features of transfers will be important for studying the magnitudes of particular frictions and which kinds of redesign will improve market activity. 
+
+
+
+The total volume and count of water transfers hovers between a quarter and three quarters of a million acre-feet across the years in our sample. This total quantity of trade does not seem to correlate with the severity of drought. In a median Normal year, 438,000 af is traded which is more than both median Dry and Wet years. During Dry years there is more incentive to trade, but less water to go around and in Wet years there is more water to go around, but less incentive to trade.
+
+\begin{table}[H]
+\centering
+\caption{Water Market Summary}\label{market_summary}
+\resizebox{0.92\textwidth}{!}{
+\begin{tabular}{lccccccccc}
+  \hline
+  \hline
+&  & Dry &  &  & Normal &  &  & Wet &  \\ 
+   & p10 & p50 & p90 & p10 & p50 & p90 & p10 & p50 & p90 \\ 
+   \hline
+  Summary &  &  &  &  &  &  &  &  &  \\ 
+  Total transfer volume (TAF) & 265 & 385 & 479 & 380 & 438 & 660 & 276 & 325 & 524 \\ 
+  Transfer count & 95.5 & 131 & 232 & 119 & 185 & 249 & 136 & 164 & 203 \\ 
+   &  &  &  &  &  &  &  &  &  \\ 
+  Share of transfer volume &  &  &  &  &  &  &  &  &  \\ 
+  Right is traded & 0.108 & 0.155 & 0.178 & 0.015 & 0.041 & 0.189 & 0.039 & 0.063 & 0.142 \\ 
+  Real water determination & 0.151 & 0.205 & 0.239 & 0.027 & 0.065 & 0.266 & 0.043 & 0.078 & 0.147 \\ 
+  Within CVP & 0.454 & 0.579 & 0.675 & 0.488 & 0.692 & 0.825 & 0.798 & 0.853 & 0.903 \\ 
+  Within SWP & 0.103 & 0.145 & 0.251 & 0.116 & 0.2 & 0.262 & 0.023 & 0.038 & 0.048 \\ 
+  Within hydrologic region & 0.294 & 0.36 & 0.569 & 0.425 & 0.53 & 0.658 & 0.551 & 0.647 & 0.693 \\ 
+  Crossed Delta & 0.081 & 0.416 & 0.603 & 0.009 & 0.171 & 0.23 & 0.003 & 0.011 & 0.016 \\ 
+  Within agriculture & 0.783 & 0.806 & 0.825 & 0.511 & 0.824 & 0.902 & 0.839 & 0.854 & 0.935 \\ 
+  Agriculture to urban & 0.033 & 0.055 & 0.083 & 0.014 & 0.052 & 0.413 & 0.044 & 0.095 & 0.113 \\ 
+  Urban to agriculture & 0.042 & 0.087 & 0.111 & 0.027 & 0.066 & 0.095 & 0.009 & 0.025 & 0.031 \\ 
+  Within urban & 0.018 & 0.057 & 0.102 & 0 & 0.025 & 0.062 & 0.008 & 0.017 & 0.028 \\ 
+   \hline
+\end{tabular}
+}
+\vspace{5pt}
+\caption*{\textit{Notes:} Table reports summary statistics about surface water trade in California from 2005-2015. Years are considered \textit{Normal} within the inter-quartile range of total statewide surface water volume, with \textit{Dry} and \textit{Wet} below and above this range. Within each type of year, the 10th, median, and 90th percentiles across DAUCOs for the listed statistic are reported.}
+\end{table}
+
+
+The breakdown of characteristics of trade shows that the majority of trades in every years are farmer-to-farmer and within the Central Valley Project. Any trade involving a city, either as a buyer or seller, is much less likely. In a 90th percentile Normal year, we see the largest share of trade from farmers to cities at 41.3\% of trade volume. This is surprising given that we expect large gains to exist (and show later in the paper) that large gains exist between agricultural and urban users. 
+
+Trades crossing the Delta are especially unlikely in wetter years but in Dry years can make up over half of all trade volume. Recall that groundwater depth, which is essentially pumping cost up to a scaling, is much deeper south of the Delta with most surface water flowing north of the Delta. Only in Dry years do we see transfers adjusting for this kind of misallocation. Real water determinations are similarly more likely in drier years, but do not show as stark a pattern. 
+
+\section{Reduced Form Analysis}
+
+In this section, we provide reduced form evidence of agricultural substitution to groundwater and of surface water market trade frictions to motivate a structural model of willingness-to-pay for surface water and a water market for bilateral trades under transaction costs. 
+
+\subsection{Groundwater Substitution}
+
+Farmers could respond to surface water scarcity by fallowing land, substituting to groundwater pumping, or by switching crops. In Section 5 we will incorporate all three decisions in a model of agricultural production. Before building up a structural model, we first establish some descriptive statistics on the elasticity of fallowing and groundwater pumping to surface water availability. These elasticities both inform how farmers value surface water and how the agricultural economy may change in response to alternative surface water allocation mechanisms.  
+
+Each DAUCO is endowed with surface water $SW_{it}$ that adjusts each year according to hydrological conditions, the seniority of property rights owned within the DAUCO, and the set of contracts with project water. We are interested in the quantity of groundwater pumped when surface water varies. We estimate the following regression: 
+
+\begin{align}\label{eq:gw_sub}
+    GW_{it} = \alpha SW_{it} + \beta \textbf{X}_{it} + \theta_i + \xi_t + \varepsilon_{it}.
+\end{align}
+
+The parameter of interest is $\alpha$, representing the marginal response to an additional unit of surface water. We include controls for effective rain (the amount of precipitation usable for agricultural production) and groundwater depth along with both DAUCO and year fixed effects. We report results in Table \ref{ag_response}. For each additional acre-foot of surface water, farmers substitute to pumping 0.848 acre-feet of groundwater.  
+
+This substitution pattern aligns with the summary statistics in Table \ref{water_summary} on statewide agricultural surface water and groundwater use across different drought scenarios. It makes sense that groundwater is not a perfect substitute since surface water endowments are essentially free whereas groundwater must be pumped at a cost. The elasticity of groundwater pumping to surface water is equivalent with respect to effective rain - the amount of rain that can effectively offset irrigation needs.
+
+Two key takeaways from this analysis motivate our model in Section 5. First, groundwater substitution is a key margin of adjustment for farmers. Second, surface water availability affects the decision to pump in the same way  precipitation does. 
+
+\begin{table}[H]
+\begingroup
+\centering
+\caption{Agricultural Response to Surface Water Availability}\label{ag_response}
+\resizebox{0.32\textwidth}{!}{
+\begin{tabular}{lc}
+   \toprule
+                            & Groundwater Pumped\\  
+                            & (1)\\  
+   \midrule 
+   Surface Water                      & -0.8484$^{***}$\\   
+                            & (0.1035)\\   
+   Effective Rain            & -0.8487$^{***}$\\   
+                            & (0.1405)\\   
+    \\
+   Observations             & 4,496\\  
+   R$^2$                    & 0.9298\\  
+   Within R$^2$             & 0.5619\\  
+    \\
+   DAUCO Fixed Effects  & $\checkmark$\\   
+   Year Fixed Effects       & $\checkmark$\\   
+   \bottomrule
+\end{tabular}}
+\par\endgroup
+\caption*{\textit{Notes: } Table reports estimates from the regression specified in Equation \ref{eq:gw_sub} Observations are at the DAUCO-year level and the panel includes data from 2002-2020 (excluding 2004, 2009, and 2017 which are not available). Standard errors are clustered at the DAUCO-level. } 
+\end{table}
+
+
+
+
+
+\subsection{Decomposing Frictions to Surface Water Transfers}
+
+The set of hydrological and regulatory frictions depends delicately on the locations and identities of potential surface water buyers and sellers. To motivate decomposing the relative magnitude of different frictions, we leverage panel data on surface water transfers to analyze how surface water endowed in particular markets ends up being traded to different markets or remaining within the originating market. This section analyzes the kinds of water market trade volume variation discussed in Table \ref{market_summary}. 
+
+Define a market as a region-water class-year. There are 8 hydrologic regions where we observe trade from 2005-2015. There are three classes of surface water: Rights, SWP, and CVP. SWP and CVP project water is managed by the state and federal government respectively and affords administrative benefits to trade within projects. Surface water rights greatly outnumber project water, but are subject to additional frictions. 
+
+The underlying property right to water could be transferred, or alternatively, project water can be transferred within the project. For each market, we compute the total amount of endowed surface water and the total volume traded to each other market. Let $s_{odt}$ be the share of water traded from market $o$ to market $d$ in year $t$. 
+
+For each water right in a given year, the owner can choose to keep it or sell it. Depending on the seller's market and the buyer's market, the transfer will be subject to different transaction costs. The market for rights is subject to right verification, where the quantity of water available for diversion must be verified. Project water is not subject to right verification. Transfers within project boundaries do not require a change in place of use for the underlying water property right. However, any transfer of rights and any transfer of project water out of project boundaries will require real water determination to assess third party hydrological externalities. 
+
+We estimate the following regression: 
+
+\begin{equation}\label{eq:friction_reg}
+\log(s_{odt}) - \log(s_{oot}) = \beta X_{odt} + \theta_o + \eta_d + \varepsilon_{odt}
+\end{equation}
+
+where $X_{odt}$ includes the difference in median marginal gains from trade between origin and destination regions\footnote{We use estimates from our agricultural and urban willingness-to-pay models in Sections 5 and 6 to compute marginal gains.}, dummy variables for the water uses of the seller and buyer, if a right is being sold, if real water determination is required and the distance in miles between trader. We include seller's market and buyer hydrologic region fixed effects. We additionally estimate the regression on only project sellers and only rights sellers. 
+
+\begin{table}[H]
+\begingroup
+\centering
+\caption{Trade Friction Regression}\label{friction_spec}
+\resizebox{0.3\textwidth}{!}{
+\begin{tabular}{lcccc}
+   \toprule
+    & \multicolumn{3}{c}{$\log (s_{odt}) - \log (s_{oot}) $}\\
+                  & (1)             & (2)           \\  
+   \midrule 
+   CityToAg       & 0.1912$^{*}$     & 1.006$^{***}$\\   
+                  & (0.0923)         & (0.1444)\\   
+   CityToCity     & 0.1256           & 0.0861\\   
+                  & (0.0964)         & (0.0829)\\   
+   AgToCity       & -0.3292$^{***}$  & -1.058$^{***}$\\   
+                  & (0.0264)         & (0.1245)\\   
+   Rights        & -1.694$^{***}$   & -1.682$^{***}$\\   
+                  & (0.1191)         & (0.1158)\\   
+   Project Exports     & -0.4956$^{***}$  & -0.4658$^{***}$\\   
+                  & (0.0382)         & (0.0379)\\   
+   Cross Delta   & -0.5232$^{***}$  & -0.4504$^{***}$\\   
+                  & (0.0551)              & (0.0596)\\   
+   Distance (100 miles)       & -0.0178$^{*}$     & -0.0219$^{**}$\\   
+                  & (0.0093)          & (0.0087)\\     
+   Marginal Gain (\$1k)  &                   & 1.331$^{***}$\\   
+                  &                   & (0.2090)\\   \\
+   Observations   & 11,932            & 11,932\\  
+   R$^2$          & 0.23363           & 0.28414\\  
+   \bottomrule
+\end{tabular}}
+\par\endgroup
+\caption*{\textit{Notes: } Table reports estimates from a regression of log trade shares relative to non-traded water on various characteristics of trade using a panel of surface water transfer data from 2005 to 2015 (excluding 2009). Each observation is an origin-destination-year. Standard errors are clustered at the origin market level. Column (1) does not include any control for potential gains from trade between markets. Columns (2) includes the average difference in willingness-to-pay between markets by using estimates from our structural models described in Sections \ref{ag_model} and \ref{urb_model} }
+\end{table}
+
+In Table \ref{friction_spec}, we report the results from estimating the regression in Equation \ref{eq:friction_reg}. The size of potential gains from trade is predictive of additional trade. Distance, crossing the Delta, real water determination, and switching from agricultural to urban use all are associated with lower trade volumes. The two key frictions related to managing hydrological externalities, crossing the Delta and real water determinations, have frictions equivalent over 350x larger than a dollar of potential gains from trade. We note, however, that these frictions look small relative to base trade frictions that do not require this kind of management. 
+
+\subsection{Motivating a Model}
+
+While the evidence in Table \ref{friction_spec} highlights trade frictions, it does not provide dollar denominated estimates of transactions costs nor a clear framework to evaluate counterfactual designs. Furthermore, many of the frictions are not simply administrative or bargaining costs, but structural frictions accompanied with physical restrictions on trade that are necessary to avoid third-party externalities. 
+
+For example, transfers that cross the Delta must also provide carriage water as outflow, reducing how much water a buyer can actually receive. Transfers requiring real water determinations are limited by the consumptive use of the seller. Hydrologic connectivity or conveyance infrastructure must exist between trading partners. Regressing market activity on each of these frictions may reveal the shadow cost of such friction, but will not decompose the friction into the physical constraint and the administrative overhead. Are real water determinations costly because of the bureaucratic burden or is constraining buyers to the consumptive reduction of the seller creating the friction? Is California managing the Delta as efficiently as possible given critical constraints on saltwater intrusion or can alternative management free up trade? 
+
+To answer these kinds of questions, we need to incorporate hydrological constraints and the status quo restrictions on trade that satisfy them. Since these constraints and restrictions depend on specific details of buyers and sellers, we also need more granular information about willingness-to-pay. Understanding how alternative designs impact trade will also require we specify how buyers and sellers trade. 
+
+\section{Model of surface water market with transaction costs}
+
+In this section, we formulate models of agricultural willingness-to-pay, urban willingness-to-pay, and bilateral trade under transaction costs. 
+
+\subsection{Agricultural demand}\label{ag_model}
+
+\subsubsection{Crop Production and Groundwater Pumping}
+
+Before season $t$, farmers are endowed with surface water $SW^e_{it}$ according to their rights and project contracts. Before making production decisions, farmers can trade surface water resulting in access to $SW_{it}$ acre-feet of surface water. Once final surface water resources are known, farmer $i$ decides for each acre $a$ of land $L_i$ which crop $k_a \in K$ to grow. Production is Leontief in land and water so that for each acre of crop $k$, the farmer must apply $aw_{ikt}$ of water. Applied water needs depend on farmer-year specific details like humidity, precipitation, temperature, and land quality. Farmers combine surface water and groundwater to meet total applied water needs where groundwater can be pumped at convex cost $C(GW_{it})$. 
+
+Groundwater cost depends on the price $P^e_{it}$ of electricity per kWh and the depth to groundwater $H_{it}$. Each foot of pumping requires $\rho_i$ kWh of electricity which varies depending on pumping technology and basin-specific geology \citep{timmins2002measuring}. For each acre-foot of water pumped, the water table is decreasing and so the depth to groundwater increases by $\gamma_i$. Endogenous pumping-height implies convex groundwater cost in the total quantity of water pumped (Timmins 2002). These properties yield the following cost of groundwater: 
+\begin{align}
+    C_{it}(GW_{it}) &= \int_{0}^{GW_{it}} P^e_{it} \rho_i (H_{it} + \gamma_i x) dx \\
+    &= P^e_{it} \rho_i (H_{it}GW_{it} + \frac{\gamma_i}{2}GW_{it}^2).  
+\end{align}
+For each acre, farmers pay non-water marginal costs $c_{ikt}$ and receive revenue $R_{ikt}$ for their yield. Marginal costs cover all other inputs like seeds, fertilizers, labor, which we assume have constant marginal cost and are chosen optimally by the farmer. Additionally, we assume agricultural commodities markets are competitive and revenue is taken as given. We define farmer-crop-year non-water profit $\pi_{ikt} = R_{ikt} - c_{ikt}$. The farmer's crop decisions depend on this non-water profit parameter, but do not depend on revenue and non-water marginal cost separately. We model heterogeneity in non-water profit with identically and independently distributed acre-level Type 1 extreme value shocks $\varepsilon_{akt}$ scaled by parameter $\nu$. 
+
+Altogether, the farmer makes crop choices for each acre that maximizes total profit: 
+\begin{align}
+\Pi^*_{it} = \argmax_{k_a} \sum_a (\pi_{ik_a t} + \nu \varepsilon_{a k_a t}) - C_{it}(\sum_a aw_{i k_a t} - SW_{it}). 
+\end{align}
+This combinatorial problem is not analytically convenient. As detailed in Appendix Section \ref{crop_approx}, relaxing global profit maximization and instead assuming that farmers are making locally optimal choices where any acre-level deviation in crop choice would decrease profit yields a smooth objective function. Under this assumption and when $aw_{ikt}$ is small relative to $GW_{it}$, the farmer's acre-level crop choice problem is approximated with a multinomial crop share problem where farmers allocate shares $s_{ikt}$ of their land to each crop: 
+\begin{align}
+    \Pi^*_{it} = \argmax_{s_{ikt}} \sum_k L_i s_{ikt}\pi_{ikt} - C_{it}(\sum_k L_i s_{ikt} aw_{ikt} - SW_{it}) - \frac{\nu}{L_i}(\sum_k s_{ikt} \ln s_{ikt}). 
+\end{align}
+This maximization yields an analytically tractable description of optimal crop choices that should resemble results from standard multinomial logit models. Letting the outside option $k= 0$ represent a farmer's choice to fallow, the optimal crop shares equate total marginal crop profit with the scaled log ratio of crop share to fallowing share. 
+\begin{align}
+    \nu(\ln s_{ikt} - \ln s_{i0t}) = \pi_{ikt} - aw_{ikt}P^e_{it}\rho_i(H_{it} + \gamma_i(\sum_k L_i s_{ikt}aw_{ikt} - SW_{it})). 
+\end{align}
+Varying the optimal profit function with surface water $SW_{it}$ pins down the farmer's value for surface water: 
+\begin{align}
+V_{it}(SW) = \Pi_{it}^*(SW).
+\end{align}
+
+\subsubsection{Notes on agricultural model}
+
+First, our model shares a similar final estimating equation to the management cost function in Carpentier and Latort (2014). To explain crop-diversification in their setting they include an entropy cost to crop share choice that they argue represents the impact of quasi-fixed capital, risk, and heterogeneous irrigation timing. One contribution in this paper is demonstrating that their model approximates one with logit shocks at a granular level of production. 
+
+Second, the marginal cost of pumping groundwater plays a focal role in this model of agricultural production. The marginal value of surface water is exactly the marginal cost of groundwater. We view incorporating groundwater substitution into our agricultural model as a key innovation and contribution of this paper. Prior research on water marketing in California has either kept surface water or groundwater resources fixed in their analysis of crop choice \citep{burlig2024groundwater, Hagerty2023, Regnacq2016}. First, in speaking with farmers cooperative and scientists at the DWR, we found that groundwater pumping is a key margin of substitution that accurately describes the farmer's production choices and informs where surface water is valuable. Second, while not a feature in this paper, the surface-groundwater hydrological nexus has its own set of externalities on supply and on the environment. For example, overpumping can lead to land subsidence, collapsing canal infrastructure, poisoned water supply, and can deplete flowing surface water supply. Any significant change to surface water management is sure to impact groundwater pumping choices which, if not incorporated into the new surface water policies, may yield bad side effects for the system as a whole. Unfortunately, the surface-groundwater nexus is not well understood hydrologically, let alone economically, and we view this as an important direction for future market design work as information becomes more available. 
+
+\subsection{Urban demand}\label{urb_model}
+
+We assume that each utility $i$ maximizes consumer surplus net of water production costs [NEEDS WORK]. Urban consumers' demand responds to the average cost per acre-foot $P_{it}$ \citep{ito2014do}. Demand depends on characteristics of the utilities' consumers including: rainfall, household income, lot size, and population. We model the total quantity of water demanded $Q_{it}$ by: 
+\begin{align}
+    \ln Q_{it} = \eta P_{it} + \beta \textbf{X}_{it} + \theta_i + 
+    \xi_{t} + \varepsilon_{it}. 
+\end{align}
+Integrating the demand curve we can back out the consumer surplus from a given quantity of water $X$. However, this represents the willingness-to-pay of the consumer and not of the utility. The utility must pay a marginal production cost per unit of water that includes transportation, treatment, and maintenance. We assume that the utility faces a marginal water production cost of $\phi_i$ that represents all services other than sourcing the water. This implies the following consumer surplus function adjusted for utility production costs that traces out the utility's value for surface water on the open market. 
+\begin{align}
+V_{it} (X) = \int_{0}^X \frac{1}{\eta}\Big(\ln q - \beta \textbf{X}_{it} - \theta_i - \xi_t\Big) -  \phi_{it} \hspace{3pt} dq. 
+\end{align}
+
+\subsection{Bilateral Trade and Transaction Costs}
+
+In a bilateral trade each trader has a value $V_i(w)$ for water $w$. Agricultural and urban values for water are as described  in equations (8) and (10). According to return flow and Delta management regimes, when a seller reduces diversion by $w$, a buyer increases diversion by $\alpha(s,b)w$. For example, a trade requiring real water determination from a seller with consumptive share $0.8$ to a buyer that is across the Delta and needs 22\% carriage water will have $\alpha(s,b) = (1 - 0.22)0.8$. 
+
+Trades are subject to a marginal transaction cost $\tau_{sbt}(\theta)$ that depends on the seller-buyer-year and transaction cost parameters $\theta$. Before trading, sellers and buyers have $W_s$ and $W_b$ water. Total gains from trading $w$ are: 
+\begin{align*}
+G_{sbt}(w, W_s, W_b, \theta) &= \Big(V_{st}\big(W_s - w\big) - V_{st}\big(W_s\big)\Big) + \Big(V_{bt}\big(W_b + \alpha(s,b)w\big) - V_{bt}\big(W_b\big)\Big) - \tau_{sbt}(\theta)w 
+\end{align*}
+For each pair the optimal trade and gains from trade are: 
+\begin{align*}
+    w_{sbt}^*(W_s, W_b, \theta) = \argmax_{w} G_{sbt}(w, W_s, W_b, \theta) &&
+    G_{sbt}^*(W_s, W_b, \theta) = G_{sbt}(w_{sbt}^*, W_s, W_b, \theta)
+\end{align*}
+The adjustment function $\alpha(s, b)w$ is one of the most important features of this model that has been missing in the literature. This function explicitly incorporates how hydrological constraints map to physical trade frictions in the water market. By including this tradeable water adjustment, we purge our estimation of transaction costs of the frictions that must be endured to maintain hydrological feasibility.   Furthermore, this function generalizes a series of potential policy proposals to manage these externalities. For example, the current CA policy regime (when not crossing the Delta) is $\alpha_{CA}(s,b) = \alpha_s$, where $\alpha_s$ is the consumptive share of the seller. Much of the purpose of a real water determination is to determine this $\alpha_s$. A policy proposal we consider is setting $\alpha_{fix}(s,b) = \alpha$ to a fixed share regardless of the trading partners identities so that no cost must be paid to adjudicate the trade.\footnote{In many cases, the optimal adjustment would be $\alpha_{fix}(s,b) = \alpha_s/\alpha_b$ which translates to trading net water use. While this may be optimal, this policy cannot be applied in all hydrological scenarios, in particular when buyers do not return water in the same place as sellers. We ultimately find that the choice of $\alpha(s,b)$ does not significantly impact trade and so do not introduce the extra complexity of this more sophisticated policy proposal.}
+
+The choice to make transaction costs marginal and fixed is largely one of computational convenience. While our estimation framework will allow for fixed costs or more complicated parameterizations, the simulation of trade under other choices is more sensitive to small changes in parameter space, making our estimation behave poorly numerically. Interrogating this constant marginal cost choice and streamlining other formulations is an active area of current research. 
+
+\section{Estimation}
+
+\subsection{Estimation of pumping cost and crop parameters}
+
+We do not have farmer-level data and instead treat DAUCOs as the decision maker $i$.\footnote{In Appendix Section \ref{appendix_gw_data} show that under the assumption that farmers within a DAUCO share non-water profit parameter $\pi_{ikt}$, accurately anticipate the pumping needs of other farmers, and do not strategically time groundwater pumping, our model is equivalent to a model with many farmers making their own (locally) optimal crop choices.} We observe, $L_i, P_{rkt}, aw_{ikt}, P_{it}^e, H_{it}$, and $s_{ikt}$, leaving $\gamma_i$, $\rho_i$, $\pi_{ikt}$, and $\nu$ for estimation. 
+
+We assume that the endogenous effect of pumping on depth, $\gamma_i$, is inversely related to the surface area of the underlying groundwater basin and scaled by parameter $\gamma$ which is constant across DAUCO. We choose $\gamma$ so that the groundwater pumping volume weighted average $\gamma_i$ is equal the endogenous depth parameter in \cite{timmins2002measuring}: $\overline{\gamma} = 6.35 \times 10^{-4}$.\footnote{}
+
+\begin{equation}
+    \hat{\gamma} =  \argmin_{\gamma}\Big(\overline{\gamma} - \sum_{it} GW_{it} \cdot \frac{\gamma}{\textrm{BasinSurfaceArea}_i} \Big)^2
+\end{equation}
+
+
+ We estimate pumping efficiency $\rho_i = \rho_r$ at the hydrologic region level by matching total energy used to pump groundwater $E_{rt}$ in year $t$ and hydrologic region $r$ from 2005-2015. 
+\begin{align}
+    \hat{\rho}_r = \argmin_{\rho_r} \sum_h \Bigg(E_{rt} - \rho_r \sum_{i \in r} \Big(H_{it} GW_{it} + \frac{\gamma_i}{2}GW_{it}^2\Big)\Bigg)^2
+\end{align}
+With $\hat{\rho}_r$, the local optimality condition in Equation (7) allows us to compute $\hat{\pi}_{ikt}(\nu)$ by: 
+\begin{align}
+    \hat{\pi}_{ikt}(\nu) = \nu(\ln s_{ikt} - \ln s_{i0t})  + aw_{ikt}P^e_{it}\hat{\rho}_{r(i)}(H_{it} + \gamma_i(\sum_k L_i s_{ikt}aw_{ikt} - SW_{it}))
+\end{align}
+For any choice of $\nu$, we can match crop shares and groundwater pumping with some set of $\hat{\pi}_{ikt}(\nu)$. Without further structure, non-water profit parameters could capture variation in surface water water availability. For example, in wet years, farmers may grow much more rice and the model will attempt to rationalize this with higher non-water profit for rice. Since surface water endowments are exogenous across years within DAUCO, we require that within-DAUCO variation in surface water availability is not correlated with non-water profit. Define $\overline{\pi}_{ik}(\nu) = \frac{1}{T}\sum_t \hat{\pi}_{ikt}(\nu)$ and $\overline{SW}_i = \frac{1}{T}\sum_t SW_{it}$. We choose $\hat{\nu}$ to minimize the following condition on the correlation between non-water profit parameters and surface water. 
+\begin{align*}
+\hat{\nu} = \argmin_{\nu} \sum_{i, k} \Big(\big(\hat{\pi}_{ikt}(\nu) - \overline{\pi}_{ik}(\nu) \big)\cdot \big(SW_{it} - \overline{SW}_i\big)\Big).
+\end{align*}
+
+In Table \ref{ag_model_est} we report summary statistics of our agricultural parameters. For each crop, we report the mean, median, 10th, and 90th percentiles of applied water needs per acre, $aw_{ikt}$, and non-water crop profit per acre-foot, $\pi_{ikt}/aw_{ikt}$. 
+\begin{table}[H]
+\centering
+\caption{Agricultural Model Parameters and Estimates}\label{ag_model_est}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{lccccccccc}
+  \hline
+  \hline
+ & Mean & p10 & p50 & p90 &  & Mean & p10 & p50 & p90 \\ 
+ \hline
+  \textit{Crop Non-water Profit $\pi_{ikt}$, \$/af} &  &  &  &  & \textit{af/acre} &  &  &  &  \\ 
+  Alfalfa & 58.3 & 9.71 & 38.8 & 119 &   & 5.61 & 3.76 & 5.48 & 7.72 \\ 
+  Almonds/Pistachios & 49.6 & 11.4 & 41.5 & 101 &   & 4.29 & 3.41 & 4.31 & 5.04 \\ 
+  Citrus/Subtropical & 86.1 & 16 & 55.2 & 187 &   & 4.03 & 2.72 & 3.83 & 5.38 \\ 
+  Corn & 35 & 5.43 & 30.2 & 67.6 &   & 2.76 & 2.26 & 2.71 & 3.34 \\ 
+  Cotton & 47.8 & 10.9 & 30.8 & 109 &   & 3.47 & 2.74 & 3.33 & 4.08 \\ 
+  Cucurbits & 61.4 & 4.93 & 40 & 129 &   & 2.5 & 1.57 & 2.48 & 3.58 \\ 
+  Dry Beans & 26.9 & 3.37 & 21.2 & 60.8 &   & 2.34 & 1.79 & 2.31 & 2.91 \\ 
+  Fresh Tomato & 36.2 & 2.91 & 27 & 89.7 &   & 2.11 & 1.57 & 1.99 & 2.73 \\ 
+  Grain & 54.2 & 12.8 & 40.1 & 109 &   & 1.7 & 0.67 & 1.61 & 2.66 \\ 
+  Onion/Garlic & 68 & 13.7 & 68.9 & 121 &   & 3.28 & 2.39 & 3.26 & 4.11 \\ 
+  Other Deciduous & 32.2 & 9.03 & 27.4 & 57 &   & 3.94 & 3.15 & 3.9 & 4.85 \\ 
+  Other Field & 45.9 & 7.34 & 35 & 96.8 &   & 2.97 & 2.35 & 2.96 & 3.44 \\ 
+  Pasture & 43.9 & 9.47 & 28.6 & 98.1 &   & 4.92 & 3.06 & 4.7 & 6.95 \\ 
+  Potato & 92.3 & 16.1 & 90.2 & 171 &   & 2.81 & 1.5 & 2.36 & 4.59 \\ 
+  Processing Tomato & 36 & 4.34 & 26.6 & 92 &   & 2.66 & 2.19 & 2.68 & 3.16 \\ 
+  Rice & 19.3 & 4.61 & 17.1 & 38.9 &   & 4.28 & 2.88 & 4.89 & 5.26 \\ 
+  Safflower & 40.8 & 3 & 26.9 & 115 &   & 2.04 & 0.965 & 2.29 & 2.69 \\ 
+  Truck Crops & 71.8 & 14.8 & 45.6 & 155 &   & 2.17 & 1.02 & 1.87 & 3.81 \\ 
+  Vineyard & 51.3 & 14.9 & 39.4 & 103 &   & 3.08 & 1.59 & 2.98 & 4.41 \\ 
+   &  &  &  &  &  &  &  &  &  \\ 
+  \textit{Other Agr. Parameters} &  &  &  &  &  &  &  &  &  \\ 
+  Electricity Price, \$/kWh & 0.118 & 0.0998 & 0.118 & 0.147 &   &   &   &   &   \\ 
+  Pumping Efficiency $\rho_i$, kWh/af/ft & 4.9 & 2.51 & 3.47 & 12.5 &   &   &   &   &   \\ 
+  Endogenous Depth $\gamma_i$, ft/af & 6.4e-04 & 1.2e-04 & 2.7e-04 & 15.4e-04 &   &   &   &   &   \\ 
+  GW Depth, ft & 95.2 & 14 & 66.6 & 218 &   &   &   &   &   \\ 
+  Marginal WTP, \$ & 48.8 & 9.06 & 32.7 & 104 &   &   &   &   &   \\ 
+  Scale of Acre-level Shocks, $\nu$ & 124.33  &  &  &  &   &   &   &   & \\
+   \hline
+\end{tabular}}
+\caption*{\textit{Notes: } Table summarizes estimates for the agricultural model on the panel of DAUCO-level data from 2005-2015.  For each crop, we report summary statistics about the estimated non-water profit parameters. We report the mean, 10th, median, and 90th percentiles of non-water profit per acre-foot within crop and across DAUCO-years. We also report the same summary statistics for applied water requirements across crops. In the bottom left of the table, we report similar summary statistics for the groundwater cost parameters and the estimated scale fo acre-level shocks.}\label{ag_model_est}
+\end{table}
+
+The four crop categories with the highest non-water profit per acre-foot are potato, citrus/subtropical, truck crops, and cucurbits. The lowest profit crops include rice, dry beans, other deciduous, and corn. The estimate largely correspond with priors that specialty fruits and nuts are highly profitable and cash crops are relatively less valuable. In Appendix Figure \ref{fig:ag_param_map} we show the highest profit crop per acre-foot for each DAUCO. 
+
+We also report statistics for the other groundwater parameters along with final estimates of the marginal willingness-to-pay for surface water. Electricity prices from 2005-2015 for agricultural consumers average about 12 cents per kWh. Pumping efficiency estimates varies quite a bit with San Francisco Bay and Colorado River regions showing inefficiency at around 12 kWh required to life one acre-foot one foot. On average, farmers increase the depth to groundwater by one foot for every 22 thousand acre-feet pumped, but this varies substantially across DAUCOs depending on the size of the basin. The average marginal willingness-to-pay for water is \$48.80 per acre-foot.\footnote{Burlig et. al (2024) construct a model of groundwater demand using microdata on pumping and electricity data and estimate average marginal groundwater cost at \$47.37/af.}
+
+
+\subsection{Estimation of urban demand and production cost}
+
+We estimate the demand specified in Equation (9) using audit data of all California water utilities from 2016-2022. To mediate price-quantity endogeneity we instrument for price with the quantity of water supply that is guaranteed to the utility that year according to their own property rights. There is a complex supply chain between water utilities and wholesalers that ultimately determines supply. While many utilities have their own property rights or project contracts to surface water, a majority of supply is determined according to the wholesaler market. Utilities with their own secure right are guaranteed a level of supply whereas utilities without their own water resources are subject to wholesaler prices and bargaining. We expect that utilities with more secure water supply will have lower prices for consumers and the level of own supply varies within utility across years according to hydrological conditions. 
+
+In Table \ref{urb_model_est} we report the results from our estimation. Columns (1-2) include year-region fixed effects, columns (3-4) include utility fixed effects and we include both the OLS and IV estimates. In both cases, OLS underestimates the magnitude of the demand elasticity. Using utility's own supply as an instrument and exploiting variation over time we estimate that urban water demand is inelastic with respect to average unit price with a point estimate elasticity 0.36. Using our preferred spec in column (4), we can back out the residential willingness-to-pay for surface water on the open market.  
+
+In Figure \ref{fig:wtp_fig} we depict the distribution of estimated marginal willingness-to-pay across DAUCOs and urban utilities. Clearly there are large gains to be made from trade between farmers and cities with median gains of \$524/af. To rationalize the limited market activity, we need to parameterize and estimate transaction costs. 
+
+\begin{table}[H]
+\begingroup
+\centering
+\caption{Urban Demand Estimation}\label{urb_model_est}
+\resizebox{0.5\textwidth}{!}{
+\begin{tabular}{lcccc}
+   \toprule 
+                                  & \multicolumn{2}{c}{LogSupply}          & Price (\$100) \\ 
+                                  & IV           & OLS           & First-Stage\\  
+   \midrule 
+   Price (\$100)                  & -0.0094$^{**}$ & -0.0023$^{***}$ &   \\   
+                                  & (0.0043)       & (0.0008)        &   \\   
+   LogRain                        & -0.0018        & -0.0032         & -2.128$^{*}$\\   
+                                  & (0.0253)       & (0.0151)        & (1.192)\\   
+   LogHouseholds                  & 0.7905$^{***}$ & 0.7952$^{***}$  & -1.175\\   
+                                  & (0.0808)       & (0.0819)        & (0.7646)\\   
+   LogVolOwn                      &                &                 & -0.3237$^{*}$\\   
+                                  &                &                 & (0.1685)\\   
+    \\
+   Observations                   & 1,998          & 1,998           & 1,998\\  
+   F-test (1st stage), Price      & 46.332         &                 & \\  
+   R$^2$                          & 0.99875        & 0.99900         & 0.93286\\  
+   Within R$^2$                   & 0.58473        & 0.66782         & 0.01465\\  
+    \\
+   Year-HydroRegion fixed effects & $\checkmark$   & $\checkmark$    & $\checkmark$\\   
+   UtilityID fixed effects        & $\checkmark$   & $\checkmark$    & $\checkmark$\\   
+   \bottomrule
+\end{tabular}}
+\par\endgroup
+\caption*{\textit{Notes: } Table reports estimates from the urban demand regression of logged utility supply quantity on price and various covariates specified in Equation X. Fixed effects are included at the Year $\times$ Hydrological Region and utility level. Standard errors are clustered at the Year $\times$ Hydrological Region level. The regression is estimated on an unbalanced panel of data from 2016-2022 with XXX utilities. Estimates are scaled for readability.  }
+\end{table}
+
+
+
+\begin{figure}[htbp]
+  \centering
+    \caption{Estimated Marginal WTP: Agriculture vs. Urban}
+    \includegraphics[width=\textwidth]{figures/full_wtp_density.pdf}
+  \caption*{\textit{Notes: } Figure depicts the distribution of marginal willingness-to-pay per acre-foot at pre-trade surface water endowments for agricultural DAUCOs and urban utilities. The empirical distribution shown is estimated on California data from 2012-2015 using the procedures described in Sections X and Y. }
+  \label{fig:wtp_fig}
+\end{figure}
+
+\subsection{Estimation of transaction costs}
+
+Given our models of willingness-to-pay, we parameterize transaction costs and estimate by simulated method of moments - matching surface water trade moments in California from 2012-2015.  
+
+ A bilateral trade is subject to transaction cost $\tau_{sbt}(\theta)$ per acre-foot that depends on parameters $\theta = (\tau, \psi, \sigma)$, the characteristics of trade, and a structural shock unobserved by the econometrician but observed by the trading agents: 
+ \begin{align}
+\tau_{sbt} = 
+\tau_1  \textrm{AgToAg} +\tau_2 \textrm{CityToAg} + \tau_3\textrm{CityToCity}  + \tau_4 \textrm{AgToCity} 
+ +  \\ 
+ \tau_5 \textrm{isRight} + \tau_6\textrm{ProjectRWD} + \tau_7\textrm{CrossDelta} + \tau_8  \textrm{Distance} 
+ + \psi_{r(s)} - \psi_{r(b)} + \sigma \varepsilon_{sbt}.  
+\end{align}
+Parameters $\psi_r$ are shifters for willingness-to-pay of traders from a particular region. Shocks $\varepsilon_{sbt}$ are i.i.d. standard normal where $\nu$ represents the variance of these shocks. Transaction cost parameters $\tau_1$ through $\tau_4$ represent average trade frictions between different kinds of users for water transfers that trade project water, within project, and without crossing the Delta. Parameters $\tau_5$, $\tau_6$, and $\tau_7$ represent the additional friction when traders face the burdens associated with trading a right, approving project water to be traded out of project, and from crossing the Delta. Lastly, the distance parameters $\tau_8$ estimates the transaction cost per mile per acre-foot. 
+
+For a given choice of parameters $\hat{\theta}$ and draw of errors $\varepsilon_{sbt}$, we randomly pair up buyers and sellers and enact trade until there are no more willing trading pairs. We summarize the outcomes of this trading protocol with 17 estimated moments $\hat{M}(\hat{\theta}, \epsilon_{sbt})$ reported in Table ZZ.  To pin down the first 7 parameters, we compute the average annual trade volumes between different uses, of rights, of project water requiring real water determination, and of transfers that cross the Delta. We compute the average distance between buyers and sellers that trade, weighted by the transfer quantity. To estimate the variance parameter $\sigma$, we compute the residual variance of the reduced from trade friction regression from Section XX. Lastly, we compute the net trade of each hydrologic region to calibrate regional parameters $\psi$. 
+
+To implement estimation by simulated method of moments, we draw $R = 100$ error vectors $\{\epsilon^r_{sbt}\}$ and compute the average of each moment and the corresponding average error: 
+\begin{align*}
+\overline{M}(\hat{\theta}) = \frac{1}{R}\sum_{r = 1}^R \hat{M} \big(\hat{\theta}, \varepsilon^r)\big) && 
+\overline{e}(\hat{\theta}) = \frac{\overline{M}(\hat{\theta}) - M}{M}
+\end{align*}
+We estimate transaction cost parameters $\hat{\theta}$ by minimizing the following average weighted squared-error: 
+\begin{align*}
+\hat{\theta} = \argmin_{\theta} \overline{e}(\theta)^T W \overline{e}(\theta)
+\end{align*}
+Weight matrix $W$ is the variance-covariance matrix of estimated moments which we estimate with a two-step procedure as in \citep{hansen2002generalized}. 
+
+\subsection{Discussion of Trading Model}
+
+Our model of bilateral transaction costs and trade makes two categories of assumptions that are substantive: trading conduct and interpretation of trade friction parameters.
+
+First, our trading conduct is characterized by three key features: bilateral pairs, myopic surplus maximization, and random arrival of trading partners.  Each of these modeling choices are chosen to manage heterogeneous transaction costs and interdependence between transfer decisions. In surface water markets, transaction costs depend on the type of water asset, locations, and uses of the trading agents. Incorporating how the cost of distance, the composition of cities/farmers and kinds of water held by each agent aggregate into trade frictions quickly becomes unwieldy. Furthermore, traders in real life must resolve these agent-specific transaction costs, so bilateral transactions are more common. Analyzing bilateral trades both acts as a useful approximation and reflects the bulk of transactions we observe in the data. 
+
+However, by restricting our model to bilateral traders, we have to take a stand on how bilateral pairs determine the quantity to trade. This is particularly relevant since a pair's trading decision will affect the value of those agents' decisions with other trade partners. In our model, we assume that buyers and sellers choose trade quantity to maximize their joint surplus net transaction costs. As a buyer and seller increase their trade quantity, the buyer's marginal value decreases and the seller's increases. At some point, instead of continuing to trade until marginal values (net costs/trading constraints) are equated, it may benefit the agents to stop early and instead trade with other agents. To incorporate this kind of behavior, we would need agents to anticipate trade with other agents. This becomes incredibly complicated very quickly. Furthermore, if we believe we are in a regime where transaction costs are high relative to gains from trade, we do not expect that agents will be making delicate decisions that would require trading with multiple agents. So we view bilateral pairs myopically trading as a useful approximation and one that resembles the high friction environment we study. 
+
+Because we make this assumption, the order in which agents myopically trade will change outcomes. This problem is similar to the firm entry models studied in industrial organization where for a given set of parameters, two firms would both enter as monopolists. These parameters become intractable even with 4 firms, let alone the with the thousands of bilateral pairs in our model. This entry literature often relies on heuristics to complete the model and in our case, enforcing myopic gains and a particular order of trade achieves this. Since we would like our results to not hinge critically on the order of trade, we will average over random orders. It is important to note, that in functioning markets, prices act as information aggregators and coordinators that sidestep all these issues. These models are not useful in this setting since transaction costs are too large and heterogeneous. 
+
+The second key set of assumptions will be in our interpretation of transaction cost parameters. While our model includes many detailed features of California's surface water market, it can still suffer from classical omitted-variable bias. For example, transfers of project water that require real water determinations may also face frictions in coordinating/approval from project managers. This specific friction is not required for rights that require real water determinations, but instead rights must coordinate with project infrastructure from the outside. Furthermore, it could be that cross-project transferors are more aware of each other than non-project traders. Unfortunately, in the period where any data is available, there is limited policy variation in California's water market. Instead of benefiting from sharp quasi-random adjustments, we must incorporate everything that we can feasibly include and carefully interpret/caveat our estimates. 
+
+Ultimately, these parameters capture average gaps in willingness-to-pay along different characteristics of bilateral transaction costs. To credibly estimate a counterfactual about specific policy adjustments, experimentation is needed. Even though there are natural experiments that may induce traders to undergo particular frictions more often, this kind of variation still will not tell us anything about the details of what drives the size of the friction. 
+
+\section{Results}
+
+\subsection{Transaction Cost Estimates}
+The estimation procedure yields the parameter estimates in Table \ref{param_est} and we report the observed and estimated moments in Table \ref{moment_est}. For each mile of distance between buyer and seller, each acre-foot transferred is subject to an estimated average distance cost of \$0.53. This cost could both include  physical transportation costs and search frictions that increase in distance. 
+
+
+\begin{table}[H]
+\begingroup
+\centering
+\caption{Marginal Transaction Cost Estimates}\label{param_est}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{l|ccccccccc}
+  \hline
+  \hline
+  & AgToAg & CityToAg & CityToCity & AgToCity & isRight & ProjectRWD & CrossDelta & Distance & Residual Variance \\ 
+\hline
+  Cost \$/af & 163.01 & 47.73 & 2488.5 & 2704.94 & 402.43 & 39.31 & 21.15 & 0.53 & 54.19 \\ 
+   \hline
+\end{tabular}}
+\par\endgroup
+\caption*{\textit{Notes: } The table reports transaction cost parameter estimates $(\tau, \psi, \sigma)$ that minimize the objective function in Equation Z on our combined panel data in California from 2012-2015. The distance parameter is in \$/mile$\times$af.  }
+\end{table}
+
+The first four parameter estimates describe average frictions when surface water is traded between different uses. For agricultural buyers, trade is subject to transaction costs of \$163/af and \$48/af when the seller is a farmer or buyer, respectively. On the other end, when cities are purchasing water, trade is subject to much higher trade frictions. We estimate an average friction of \$2704/af when farmers try to sell to cities. We think two key issues are the source of high transaction costs for urban buyers. First, utilities often purchase surface water from large regional wholesalers, which creates a supply chain friction between willing buyers and sellers. Second, transfers from cities to farms are often scrutinized both politically and administratively for both the potential economic impact on the local agrarian community and the hydrological impact on the environment or downstream supply \citep{ferguson2024is}. In Appendix Table \ref{appendix_friction_spec} we provide some reduced form evidence that political opposition in agricultural communities to transferring surface water to cities explains nearly have of the friction. 
+
+Any transfer of non-project water held as a right or export of project water requires a real water determination that is known to be time-consuming and costly for trading partners. There are two components to real water determination. First, is verifying the quantity of water held by the seller. Second, is estimating the consumptive use of the seller so that return flow externalities are internalized. Since project water quantities are measured and reported clearly online, project water is not subject to the same scrutiny or measurement required to verify rights. However, the consumptive use computation is the same. We estimate the cost of real water determinations for project sellers at \$39/af. This cost for project real water determinations corresponds to costs associated with measuring consumptive use and evaluating downstream externalities. Transfers of rights, on the other hand, are subject to higher cost of \$402/af that includes the consumptive use measurement and the verification of the rights. There are potentially reasons other than the cost associated with rights verification that lead to higher transaction costs for rights. Right holders may have less sophisticated infrastructure, less access to storage and inter-temporal management, and increased search costs due to being in out-of-project networks. 
+
+Transfers that cross the Delta require additional review to protect fragile Delta ecosystems and avoid harmful saltwater intrusion. We estimate the friction associated with Delta transfers at \$21/af. This cost could reflect not just the administrative process required, but also the uncertainty about the final quantity of water that will be made available. The magnitude of the Delta cost parameter is smaller relative to other frictions that other research has suggested. This is because we directly control for Delta constraints in our model trade and additional costs over-and-above this structural constraint are relatively small. 
+
+We make three main conclusions from these transaction costs estimates. First, the costs associated with real water determination and crossing the Delta are large relative to agricultural value and frictions. In particular, frictions for farmers trying to sell rights make up the vast majority of the friction. Second, these frictions are small relative to transaction costs associated with city buyers. From these estimates alone, it seems that policy proposals that target streamlining real water determinations and Delta crossings will not alleviate the largest frictions in the market. 
+
+Lastly, we emphasize that our structural model that incorporates willingness-to-pay for water along with detailed pairwise transaction costs between farmers and cities results in different conclusions than the reduced form results earlier in this paper and in previous literature (CITE CITE). The results in column (1) of Table \ref{friction_reg} suggest that AgToCity frictions are not as large as those for rights, real water determinations, or Delta crossings. Even column (3), which uses our agricultural and urban models and includes average differences in willingness-to-pay between regions, the relative magnitudes of these frictions still seem large in comparison to general AgToCity frictions. An important contribution of this paper is the lesson that incorporating specific gaps in values between buyers and sellers along with their pair-specific transaction costs results in starkly different conclusions than reduced-form evidence suggests. 
+
+\subsection{Counterfactuals}
+
+We are interested in the potential economic gains from reducing transaction frictions in California's surface water market. We estimate a series of counterfactuals where we either reduce transaction costs or change how hydrological constraints are managed. We compare the outcomes of each counterfactual regime to the baseline outcomes that match observed moments in the data. 
+
+\textbf{Baseline: } In Table \ref{base_cf_table} we report average annual outcomes using baseline parameters for three drought scenarios: \textit{Dry}, \textit{Normal}, and \textit{Wet}. We report the volume of surface water trade, the increase in surplus for cities and agriculture, the total transaction costs, and the net gain after subtracting trade frictions from total surplus. We also report how many acres are fallowed and how much groundwater is pumped. Trade volumes increase from 161 to 414 thousand acre feet as we move from wet to dry years. Along with this increase in volume, there are increases in gains and surplus. In a wet year, California's entire surface water market only produced \$9.2 million in gains. Water marketing is much more valuable in dry years, producing \$76.9 million in net gains. These dry year gains are small relative to the increase in allocative surplus of nearly \$300 million since 75\% of those gains are lost to transaction costs. Despite the potential for trade, fallowed acres still increase greatly from wet to dry years by over 50\%, while groundwater pumping remains relatively constant. Table \ref{cf_table} reports these same outcomes relative to baseline levels in various counterfactuals.
+
+\begin{table}[H]
+\begingroup
+\centering
+\caption{Baseline Trade Outcomes}\label{base_cf_table}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{r||cccccccc}
+  \hline
+  \hline
+ &  & Trade Volume & Net Gain & Cost & City Surplus & Ag. Surplus & Fallowing & Pumping \\ 
+  Specification &  & (TAF) & (\$M) & (\$M) & (\$M) & (\$M) & (Million Acres) & (MAF) \\ 
+  \hline 
+   & Dry & 414 & 76.9 & 221.7 & 199.7 & 99 & 2.3 & 23.7 \\ 
+  Baseline & Normal & 293 & 46.1 & 135.2 & 115.6 & 65.6 & 2 & 23.6 \\ 
+   & Wet & 161 & 9.2 & 61 & 31.8 & 38.4 & 1.5 & 23.2 \\ 
+   \hline
+\end{tabular}}
+\par\endgroup
+\caption*{\textit{Notes: } Table reports the levels of various trading outcomes using baseline estimates, and then reports the relative change in those statistics across various counterfactuals. For each counterfactual outcome, we report the average within types of years: Dry, Normal, and Wet. The table reports estimates on years 2012-2015 where 2012 was Wet, 2013 was Normal, and 2014-2015 were dry.}
+\end{table}
+
+ \textbf{Return Flow Measurement Costs:} First, we consider the trade friction associated with return flow management that requires estimating the consumptive use of sellers. Whenever a surface water right is being traded or project water is being exported, the trade is subject to real water determination. There are two components to real water determination. First, is verifying the quantity of water held by the seller. Second, is estimating the consumptive use of the seller so that return flow externalities are internalized. Since project water quantities are measured and reported clearly online, project water is not subject to the same scrutiny or measurement required to verify rights. However, the consumptive use computation is the same. We assume that the estimated transaction cost of $\tau_6 = \$39.31/$af captures the cost of return flow adjudication for both project water exports and any trade of rights.\footnote{Caveats} Under counterfactual \textit{No RF Cost}, we consider subtracting this estimated return flow cost from both project exports and rights trade. This counterfactual captures the value of information about consumptive use to market activity. By removing the cost, the surface water market sees an increase in trade volume of about 25\% across all drought scenarios, with an additional 58 taf of trade in dry years. This increased trade corresponds to \$16.1 million dollars of allocative surplus in dry years and almost entirely benefits farmers, with little surplus to cities. These gains correspond to only a 0.4\% increase in agricultural profits. 
+
+ To achieve these gains, the cost of return flow measurement would need to be eliminated. The development of more precise satellite technology and sophisticated predictive algorithms, directly observing the consumptive use of farmers in real time is becoming possible. California could determine adjustments to return flows through a streamlined process that incorporates these kinds of models without imposing burdensome administrative processes. 
+
+
+\begin{table}[H]
+\begingroup
+\centering
+\caption{Counterfactual Results}\label{cf_table}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{r||cccccccc}
+  \hline
+  \hline
+ &  & Trade Volume & Net Gain & Cost & City Surplus & Ag. Surplus & Fallowing & Pumping \\ 
+  Counterfactual &  & (TAF) & (\$M) & (\$M) & (\$M) & (\$M) & \% & \% \\ 
+   &  &  &  &  &  &  &  &  \\ 
+   & Dry & 58 & 2.1 & 13.9 & 0.6 & 15.5 & -0.02 & 0.09 \\ 
+  No RF Cost & Normal & 46 & 1.2 & 12.3 & 0.2 & 13.3 & -0.06 & 0.07 \\ 
+   & Wet & 36 & 0.7 & 8.6 & 0.1 & 9.1 & -0.01 & 0.05 \\ 
+   &  &  &  &  &  &  &  &  \\ 
+   & Dry & 336 & 14.7 & 91.7 & 1.8 & 104.6 & 0.14 & 0.27 \\ 
+  No Delta Friction & Normal & 218 & 8.4 & 56.8 & 1.9 & 63.4 & -0.09 & 0.21 \\ 
+   & Wet & 122 & 3.5 & 32.1 & 1.9 & 33.7 & 0.06 & 0.08 \\ 
+   &  &  &  &  &  &  &  &  \\ 
+   & Dry & 415 & 17.1 & 110.5 & 2.4 & 125.3 & 0.13 & 0.37 \\ 
+  No Delta Friction, & Normal & 295 & 10.2 & 76.8 & 2.3 & 84.7 & -0.11 & 0.27 \\ 
+    No RF Cost & Wet & 185 & 4.8 & 46.9 & 2 & 49.7 & 0.06 & 0.16 \\ 
+   &  &  &  &  &  &  &  &  \\ 
+   & Dry & 1241 & 46.3 & 312 & 5.3 & 353 & 0.41 & 1.32 \\ 
+  No Delta Friction,  & Normal & 934 & 30.6 & 231.3 & 6.3 & 255.6 & 0.22 & 0.94 \\ 
+  No Right/RF Cost & Wet & 638 & 19.6 & 153.5 & 2.4 & 170.7 & 0.84 & 0.41 \\ 
+   &  &  &  &  &  &  &  &  \\ 
+   & Dry & 387 & 230.3 & 34.8 & 278.9 & -13.8 & 0.81 & 1.29 \\ 
+  No AgToCity Friction & Normal & 355 & 178.3 & 53.1 & 239.5 & -8.2 & 0.59 & 1.17 \\ 
+   & Wet & 366 & 142.3 & 84 & 229.3 & -3 & 0.63 & 1.26 \\ 
+   &  &  &  &  &  &  &  &  \\ 
+   No AgToCity, & Dry & 745 & 258 & 117.6 & 271.4 & 104.2 &  &  \\ 
+   No Delta Friction,& Normal & 599 & 200.4 & 107.6 & 238.5 & 69.5 &  &  \\ 
+   No RF Cost  & Wet & 515 & 160.8 & 111 & 228.3 & 43.5 &  &  \\ 
+   &  &  &  &  &  &  &  &  \\ 
+   No AgToCity, & Dry & 1601 & 342.8 & 252.2 & 267.1 & 327.9 &  &  \\ 
+  No Delta Friction,  & Normal & 1292 & 267.1 & 209.9 & 237.6 & 239.4 &  &  \\ 
+   No Right/RF Cost& Wet & 1018 & 221.2 & 172.3 & 231.7 & 161.8 &  &  \\ 
+   \hline
+\end{tabular}}
+\par\endgroup
+\caption*{\textit{Notes: } Table reports the levels of various trading outcomes using baseline estimates, and then reports the relative change in those statistics across various counterfactuals. For each counterfactual outcome, we report the average within types of years: Dry, Normal, and Wet. The table reports estimates on years 2012-2015 where 2012 was Wet, 2013 was Normal, and 2014-2015 were dry.}
+\end{table}
+
+
+ However, if these new measurement technologies prove inaccurate, overly manipulable, or too impractical to implement, we propose another policy measure. Instead of determining the consumptive of the farmer by evaluating the crop choices and environmental conditions of different agricultural regions over the last five years of production, what if a constant consumptive share was applied to all transfers, independent of production choices? In Figure \ref{fig:base_alpha_fig}, we report dry-year allocative gains under different choices for this constant return flow adjustment share ranging from 0.5 to 1. For example, under a counterfactual with return flow adjustment share 0.5, buyers can only divert 50\% of the seller's reduced diversion. The un-diverted water remains in the system to address return flow externalities, but if the choice of adjustment is more conservative than true consumptive shares, the water increases the environmental supply of water for in-stream flows, wild and scenic rivers, managed wetlands, and Delta outflow. 
+
+\begin{figure}[htbp]
+  \centering
+    \caption{Surplus Gains Across RF Constraint Counterfactuals}\label{fig:base_alpha_fig}
+    \includegraphics[width=\textwidth]{figures/baseline_alpha_frontier_plot.pdf}
+  \caption*{\textit{Notes}: Figure depicts average allocative gains from trade in dry year scenarios against the change in environmental water supply induced by trade. The color indicates which frictions are present for the box point, where costs to measure return flows of sellers are present. The asterisk represents an alternative where return flow measurement costs are removed. The frontier removes measurement costs and instead applies a constant consumptive share to all sellers. The triangle indicates the choice of constant consumptive share where no agents or or environmental regions are negatively impacted by trade.}
+\end{figure}
+
+On the x-axis, we report the additional environmental water supply made available by the associated return flow regulations. On the y-axis we report the average dry years gains in allocative surplus relative to the baseline scenario. In the event that return flow externalities harm other users, which will not happen in scenarios where sellers' true consumptive shares are known, we subtract surplus losses to impacted parties. The box point in the plot represents the baseline specification where return flow information is costly and the asterisk shows the increase in surplus under perfect information where return flow measurement costs are eliminated. Along the frontier, we plot outcomes under different choices of constant return flow shares that increase in the opacity of the line from 0.5 to 1. Under lower shares, much more water is left to the environment, but the wedge between buyer and seller values increases, decreasing gains from trade. On the other hand, as shares increase environmental flows decrease and can even bend surplus downward as downstream agents experience negative externalities from trade. The aggregate outcomes plotted on the axes mask heterogeneity in negative externalities where some farmers, cities, or environments may experience gains whereas other are hurt. The triangle point depicts the largest share, in this case 0.72, that can be chosen while insuring that no agent or region experiences a negative externality. The best constant consumptive share policy that would not require return flow measurement costs and insures no injury to downstream uses produces about the same gains as the baseline regime where traders endure the administrative costs required to determine true consumptive shares.
+
+We interpret these conclusions as a negative result for potential return flow management policy solutions to California's surface water market. First, even under an ideal world of perfect information, gains are small. Second, feasible policies to reduce return flow costs are no better than the costly information baseline. Return flow management policies, on their own, are unlikely to improve outcomes. However, we will find that these solutions are worth considering in combination with other policies. 
+
+
+\textbf{Delta Bottleneck: } Next, we consider frictions associated with the Delta. There are structural constraints that mandate surface water crossing the Delta must leave carriage water of 22\% for Sacramento River water and conveyance water of 10\% for San Joaquin River water (CITE). Additionally, to adjudicate these restrictions, transfers crossing the Delta must undergo an administrative review and careful management. We estimate that the friction from crossing the Delta, after adjusting for the Delta carriage water constraints, is \$21/af. 
+
+In counterfactual \textit{No Delta Friction}, we remove both carriage water requirements and estimated transaction costs for Delta crossings.\footnote{In Appendix Table \ref{appendix_cf_table}, we decompose gains between removing hydrological constraints and transaction costs. We find that the constraints and unexplained additional costs provide equivalent frictions to California's surface water market.} In dry years, trade volumes nearly double with an additional 336 taf. This yields agricultural surplus of \$104.6 million, equivalent to 3\% of agricultural profits, and benefits cities at nearly \$2 million. Under specification \textit{No Delta Friction, No RF Cost}, we additionally remove return flow measurement costs. This increases surplus by around 80 taf in both dry and normal years and increases allocative surplus by around 20\%. However, in Figure \ref{fig:alpha_fig} we find a similar conclusion to the previous counterfactual where responsible choices of constant return flow adjustments that do not disrupt any third-parties cannot produce more value than paying return flow costs to get exact consumptive use information. 
+
+
+These results suggest that structural constraints surrounding Delta management are very important to understanding surface water market frictions and choices in return flow management again do not matter very much. A counterfactual regime without Delta constraints is not just a hypothetical proposal, but a potential solution since California is currently considering building the Delta Conveyance Project that would bypass carriage water requirements and limits on exports in the Delta. While this analysis shows that this proposed infrastructure would improve surface water marketing, the gains without addressing other water market transaction costs are small relative to the pipelines' expected construction cost of \$20 billion.\footnote{There are other reasons we are considering building the Delta conveyance project that justify the costs including earthquake resilience, minimizing pumping restriction volatility, and minimizing impact of Delta ecosystems (PPIC 2022).} 
+
+\begin{figure}[H]
+  \centering
+    \caption{Surplus Gains Across RF Constraint Counterfactuals}\label{fig:alpha_fig}
+    \includegraphics[width=\textwidth]{figures/all_cf_alpha_frontier_plot.pdf}
+  \caption*{\textit{Notes}: Figure depicts average allocative gains from trade in dry year scenarios against the change in environmental water supply induced by trade. The color indicates which frictions are present for the box point, where costs to measure return flows of sellers are present. The asterisk represents an alternative where return flow measurement costs are removed. The frontier removes measurement costs and instead applies a constant consumptive share to all sellers. The triangle indicates the choice of constant consumptive share where no agents or or environmental regions are negatively impacted by trade.}
+\end{figure}
+
+\textbf{Rights Verification: } We also consider how frictions associated with trading rights affect market performance. Recall, real water determination for rights are not just subject to return flow adjustments, but also rights verification. Rights are often ambiguous, not digitized, and quantities are not updated annually, so buyers cannot easily find the quantity of water that sellers have and any proposed trade requires verifying the right and determining the quantity of water the seller is entitled to that year. We consider outcomes if we were able to successfully eliminate the remaining friction associated with trading rights in addition to building the Delta conveyance project under counterfactual \textit{No Right/RF/Delta Cost}. We show that trade volumes increase significantly with dry years trade volumes reaching 1.24 million acre-feet. Agricultural allocative gains reach \$353 million - over 10\% of agricultural profits. City gains remain low given the large transaction costs required to purchase water from farmers. In Figure \ref{fig:alpha_fig}, the simple policy proposal to apply constant return flow adjustments to all trades has more bite. The counterfactual indicated with the triangle applies consumptive share 0.7 to all sellers and achieves over 2/3 of the gains between costly and no-cost exact consumptive share measurement. Furthermore, this proposal yields the additional benefit of 100 taf acre-feet for environmental uses. 
+
+
+The potential policies to achieve these gains first requires the construction of the Delta pipeline and the adoption of constant return flow adjustments at a level of 0.7. Policies to eliminate the cost associated with rights are more complicated. First, we think that digitization of rights and ex-ante, accessible reporting of how much water each right holder is entitled to will reduce this friction. However, we anticipate that much of the friction associated with rights may be related to less advanced connectivity to canal infrastructure, less access to storage and inter-temporal management, and increased search costs due being in out-of-project networks. In future work, we hope to develop research designs that may provide a clearer decomposition of the frictions and policies that can best liberalize trade of surface water rights. 
+
+
+  \textbf{AgToCity Frictions: } We next consider the counterfactual where we are able to eliminate the entire friction associated with agricultural to urban transfers. Under counterfactual \textit{No AgToCity Friction} we eliminate the AgToCity cost from our marginal cost and keep all other baseline specifications. We find that this adjustment alone produces more net gains than any other specification considered this far, despite the lower trade volumes. Trade volumes increase between 366 and 387 taf across drought scenarios and net gains stretch from \$142 to \$230 million. In this counterfactual, since hydrological frictions remain unchanged, all the allocative surplus gains are attributed to cities and we actually see a decrease in agricultural surplus from all the water traded away from farmers. This decrease in agricultural surplus is associated with a 0.5-0.8\% increase in fallowing. 
+
+  Combining the removal of AgToCity frictions with the previous policy proposal, we report even more impressive gains under specification \textit{No AgToCity, No Delta Friction, No Right/RF Cost}. This counterfactual, as opposed to all other specifications, greatly benefits both farmers and cities with total surplus gains of nearly \$600 million in dry years. In Figure \ref{fig:alpha_fig}, we learn that eliminating return flow measurement costs is only valuable if right costs are eliminated, but when they are along with reduced AgToCity frictions, the simple constant return flow share proposal is worth it. 
+
+ The model in this paper cannot speak to specific policies that will address frictions between agricultural sellers and urban buyers.  We think the average friction of \$2705/af associated with agricultural to urban transfers captures many different forces. Primarily, given qualitative research into AgToCity transfers, we hypothesize that much of this transaction cost is due to political economy frictions where farmers are worried that agricultural exports of surface water will harm their local agrarian communities. However, the cost may also include average search frictions due to limited to social connections between agricultural and urban communities, increased environmental impacts from changing uses, and general repugnance to city uses of water that may be viewed as less socially valuable than agricultural production. Ongoing work is attempting to identify which of these explanations is legitimate and which can be addressed with feasible policy solutions. 
+
+ In Appendix Table \ref{appendix_cf_table}, we report a series of other counterfactuals that we view more as benchmarks rather than results to guide policy development. In counterfactual \textit{No Distance Cost}, by removing the transaction cost associated with distance, which may capture both physical conveyance costs and search costs that increase with distance trade volumes reach as large as 1.89 maf in normal drought condition years and average agricultural surplus are above \$300 million in all drought scenarios. City experience very limited gains from the elimination of distance costs. If all frictions are eliminated, average surplus gains are over \$1.3 billion across all drought scenarios, indicating that surface water misallocation is large and that friction-less trade or pricing water for all users in the state may yield incredible gains. 
+ 
+\subsection{Implications for Water Market Design}
+
+We takeaway three main lessons from these counterfactuals. First, frictions associated with return flow measurement are relatively small and simple policies that can eliminate these costs produce modest gains. Reducing rights frictions can make return flow policy proposals valuable, but this would require high levels of market liberalization with policy tools that need further research. Second, the proposed Delta pipeline infrastructure produces non-trivial gains equivalent to 3\% of agricultural profits that do not justify the project alone, but in conjunction with existing motivation for the project, support the completion of the project. Lastly, many frictions associated with agricultural sellers remain and even though more water can be productively reallocated, without improving these transaction costs, there is still a potential welfare lost. In other work, we try to explain what could be motivating these surface water use change frictions and how careful market design could mitigate these costs (Ferguson and Kashner 2024). 
+
+\section{Conclusion}
+
+This paper analyzes trade frictions in California's surface water market and highlights the kinds of policies that may increase market activity and free up productive re-allocation of scarce water resources. To estimate the magnitude of trade frictions and simulate counterfactual policy proposals we first construct a panel of water use, supply, and trade from 2005-2015. With this novel combination of data sources, this paper builds and estimates a structural model of agricultural production, urban demand, hydrological externalities, and bilateral transaction costs. 
+
+Surface water markets are known to exhibit high transaction costs but the literature has not provided clear insight into the quantitative decomposition of frictions across potential explanations, which has made targeted policy solutions more difficult to motivate. In particular, policy discussions have centered around the administrative burden of approving surface water transactions so that rights can be clarified, externalities internalized, and environmental constraints satisfied. We are able to directly estimate gains from interventions in this spheres and our left with five main conclusions. 
+
+First, the administrative costs associated with measuring consumptive use and managing return flows are relatively low and no-information management rules are not worth the potential gains. Information about consumptive use valuable, but policies that focus on reducing the return flow measurement costs are unlikely to improve welfare. 
+
+Second, infrastructural investment in the Delta conveyance project can increase agricultural profits by 3\% by relaxing costly constraints on transfers that cross the Delta. The gains from such an investment should be considered in the ongoing cost-benefit analysis of the Delta conveyance project which is expected to cost \$20 billion. Freeing up trade across the Delta is valuable for other market interventions as well. 
+
+Third, trading surface water rights is costly and any efforts to digitize records and ex ante verification of rights' quantities each year could significantly increase market activity. Combining streamlined rights verification with Delta infrastructure and a simple rule to circumvent consumptive use measurement could increase agricultural profits by 10\% and provide over 100 thousand acre-feet of additional surface water to environmental uses. 
+
+Fourth, frictions between agricultural and urban consumers, who exhibit the largest gap in willingness-to-pay, are nearly \$3000/af and if this entire friction were removed, the gains would be higher than the ensemble of policy proposals used to eliminate the hydrological and informational frictions. Understanding why these frictions are so large and designing mechanisms to overcome them is an area of ongoing and future research \citep{ferguson2024is, fergusonliu}. 
+
+Lastly, the incorporation and buyer-seller specific transaction costs along with a structural model of hydrological constraints and willingness-to-pay results in a different set of agenda items for water policy design than reduced form evidence was able to motivate. Administrative costs associated with third-party and environmental externalities are non-trivial, but will not close the largest gaps in value for water in California. Understanding the supply chain and political economy frictions in surface water markets will provide the most impactful solutions to market failure in California.  
+
+
+
+\end{onehalfspacing}
+
+\newpage
+
+\bibliography{references}
+
+\newpage
+
+\section{Appendix}
+
+\begin{onehalfspacing}
+
+
+
+
+\section{Agricultural Production}\label{crop_approx}
+
+\subsection{Smooth Approximation}
+
+Farmer $i$ has $L_i$ acres of land. For each season $t$, he chooses shares $s_{ikt}$ of land to allocate to each crop $k \in K$. Farmers make non-water profit of $\pi_{ikt}$  per acre. To produce crops, there is farmer-crop-specific applied water per acre $aw_{ikt}$ that depends on soil, land topography, irrigation efficiency, etc. Farmers treat the maximization of productivity of a given crop-acre as independent from the multiacreage crop choice problem. For choices of $s_{ikt}$, we have that $GW_{it} = \sum_k aw_{ikt}s_{ikt}L_{i} - SW_{it}$.
+
+We capture crop-rotation benefits, quasi-fixed inputs of labor and capital, and constraints on timing of harvest/irrigation with an acreage management cost function $D(\{s_{ikt}\}_k) = d_{it}^{-1} \sum_{k} s_{ikt}\ln s_{ikt}$ which will motivate crop diversification (Carpentier and Letort 2014). The farmer wants to maximize profits: 
+
+\begin{align}
+    \Pi^*_{it} = &\argmax_{s_{ikt}} \sum_k L_i s_{ikt}\pi_{ikt} - C_{it}({\sum_k aw_{ikt}s_{ikt}L_{i}} - SW_{it}) - d_{it}^{-1} \sum_{k} s_{ikt}\ln s_{ikt}   \\
+    s.t. &\sum_k s_{ikt} = 1, s_{ikt} \geq  0 .
+\end{align}
+
+To optimize farmer profit, we take first order conditions of the Lagrangian: 
+
+\begin{align}
+    \mathcal{L} = \sum_k L_i s_{ikt}\pi_{ikt}  - C_{it}({\sum_k aw_{ikt}s_{ikt}L_{i}} - SW_{it}) - d_{it}^{-1} \sum_{k} s_{ikt}\ln s_{ikt} - \lambda^S_{it}(\sum_k s_{ikt} - 1).
+\end{align}
+\begin{align}
+    \frac{\partial \mathcal{L}}{\partial s_{ikt}} &= 
+    L_i\pi_{ikt} -  \frac{\partial C_{it}}{\partial s_{ikt}}  - d_{it}^{-1} (\ln(s_{ikt}) + 1) - \lambda_{it}^S \\
+    &=  L_i\pi_{ikt} -   L_i \underbrace{aw_{ikt}P_{it}^e\rho_i \big(H_{it} + \gamma_i GW_{it}\big)}_{\Gamma_{ikt}}  - d_{it}^{-1} (\ln(s_{ikt}) + 1) - \lambda_{it}^S \\
+    &= L_i(\pi_{ikt} - \Gamma_{ikt}) - d_{it}^{-1} (\ln(s_{ikt}) + 1) - \lambda_{it}^S. 
+\end{align}
+Choosing shares to satisfy the FOC in Equation (21) we get: 
+\begin{align}
+    s_{ikt} = \exp\Big\{d_{it}L_i(\pi_{ikt} - \Gamma_{ikt})\Big\}\exp\Big\{-(d_{it}\lambda_{it}^S + 1)\Big\}
+\end{align}
+Using that shares sum to 1 and by letting $d_{it} = \frac{d}{L_i}$: 
+\begin{align}
+    s_{ikt} &= \exp\Bigg\{\underbrace{d_{it}L_i(\pi_{ikt} -\Gamma_{ikt})}_{\Psi_{ikt}}\Bigg\} \Bigg[\sum_{k}\exp\{\Psi_{ikt}\}\Bigg]^{-1} \\
+    &= \exp\Bigg\{\underbrace{d(\pi_{ikt} -\Gamma_{ikt})}_{\Psi_{ikt}}\Bigg\} \Bigg[\sum_{k}\exp\{\Psi_{ikt}\}\Bigg]^{-1}
+\end{align}
+
+Letting $0 \in K$ represent fallowing which has $aw_{i0t} = 0$ and assuming $\pi_{i0t} = 0$, the (locally) optimal share of crop $k$ satisfies the condition that the scaled log share relative to fallowing is equal to the acre-level non-water profit less the marginal cost of groundwater. 
+\begin{align}
+    \ln\Big(\frac{s_{ikt}}{s_{i0t}}\Big) / d &= \pi_{ikt} - \Gamma_{ikt}.
+\end{align}
+
+\subsection{Acre-level Micro-foundation}
+
+As described in Section \ref{ag_model}, the farmer's problem is to choose a crop function $k^*(a)$ that maps each acre to a crop to maximize total profits: 
+\begin{align}
+k^*(\cdot) &= \argmax_{k(\cdot)} \sum_{a \in L_i} \pi_{ik(a)t} + \nu \varepsilon_{ak(a)t} - C_{it}(GW_{it}) \\
+&= \argmax_{k(a)} \sum_{a \in L_i} \pi_{ik(a)t} + \nu \varepsilon_{ak(a)t} - C_{it}\Big(\sum_{a \in L_i}aw_{ik(a)t}\Big)
+\end{align}
+This problem has a smooth approximation whose solution, for a choice of parameter $\nu$, matches the solution in Equation (25) of Appendix Section YY. A component $k^*(a)$ of the optimal crop portfolio can be chosen while fixing all other acres $b \neq a$ by:
+\begin{align}
+    k^*(a) &= \argmax_{k \in K} \pi_{ikt} + \nu \varepsilon_{akt} - C_{it}\Big(aw_{ikt} + \sum_{b\neq a} aw_{ik^*(b)t}\Big) \\
+    &= \Bigg\{k: \textrm{ s.t. $\forall j$, }  \pi_{ikt} + \nu \varepsilon_{akt} - C_{it}\big(aw_{ikt} + \sum_{b\neq a} aw_{ik^*(b)t}\big) \geq \pi_{ijt} + \nu \varepsilon_{ajt} - C_{it}\big(aw_{ijt} + \sum_{b\neq a} aw_{ik^*(b)t}\big) \Bigg\} \\
+    &\approx \Bigg\{k: \textrm{ s.t. $\forall j$, }  \pi_{ikt} + \nu \varepsilon_{akt} - aw_{ikt}P_{it}^e\rho \big(H_{it} + \gamma_i \big(GW^*_{it}\big)\big)  \geq \pi_{ijt} + \nu \varepsilon_{ajt} - aw_{ijt}P_{it}^e\rho \big(H_{it} + \gamma_i \big(GW^*_{it}\big)\big) \Bigg\} \\
+    &= \Bigg\{k: \textrm{ s.t. $\forall j$, }  \pi_{ikt} + \nu \varepsilon_{akt} - \Gamma_{ikt}  \geq \pi_{ijt} + \nu \varepsilon_{ajt} - \Gamma_{ijt} \Bigg\} 
+\end{align}
+The approximation in line (30) is accurate since $aw$ is small relative to total groundwater $GW$. For any given acre, we can compute the ex-ante probability that crop $k$ is chosen: 
+\begin{align}
+    s_{akt} &\approx \textrm{Prob}\Bigg\{  \pi_{ikt} + \nu \varepsilon_{akt} - \Gamma_{ikt}  \geq \pi_{ijt} + \nu \varepsilon_{ajt} - \Gamma_{ijt}, \textrm{ $\forall j$}\Bigg\} \\
+    &= \textrm{Prob}\Bigg\{ \nu^{-1}( \pi_{ikt} + - \Gamma_{ikt}) + \varepsilon_{akt}  \geq \nu^{-1}( \pi_{ijt} + - \Gamma_{ijt}) + \varepsilon_{ajt} , \textrm{ $\forall j$}\Bigg\} \\
+    &= \exp\Big\{\nu^{-1}(\pi_{ikt} - \Gamma_{ikt}) \Big\}\Bigg[\sum_j \exp\Big\{\nu^{-1}(\pi_{ijt} -\Gamma_{ijt}) \Big\}\Bigg]^{-1}. 
+\end{align}
+
+Letting $d = \nu^{-1}$ we unite the models with the (local) optimality condition in (34) matching condition (24). The relationship between these models provides an additional micro-foundation for the management cost function of \cite{carpentier2014multicrop}. Since the relationship between these models requires that $\nu$ is scaled by the total amount of land, we provide additional guidance on how to estimate the coefficient on the management cost function. Future research on understanding how the level at which T1EV shocks are modelled, the total amount of land, and entropy all relate will provide further intuition and understanding about these crop choice models. 
+
+\subsection{Return Flow Network Estimation}\label{appendix_networks}
+
+Let $S_{ikjht}$ be the quantity of return flow that water use $k$ on DAUCO $i$ contributes to DAUCO $j$'s water use $h$ in year $t$. We do not observe all $S_{ikjht}$, but we have data on aggregated return flow supply and dependence at the DAUCO-dependent-nested\footnote{Need to define this more carefully.} planning areas, hydrologic regions, and California. For aggregated groups $G$ we observe: 
+
+\begin{align}
+    S_{ikt}(G) = \sum_h \sum_{j \in G, j\neq i} S_{ikjht} \\ 
+    D_{jht}(G) = \sum_k \sum_{i \in G, i \neq j} S_{ikjht}
+\end{align}
+
+We estimate $S_{ikjht}$ using the DWR Water Balance data we have from 2002-2020 by making the following assumption: 
+
+\begin{equation}
+S_{ikjht} = \lambda_{G}(i, k, j,h) S_{ikt}(G)
+\end{equation}
+
+Parameter $\lambda_{G}(i, k, j,h)$ represents the share of $S_{ikt}(G)$ that contributes to DAUCO $j$'s use $h$. 
+
+For each $G$, we estimate return flow shares parameters $\lambda$ by: 
+
+\begin{align}
+    \argmin_{\lambda_{G}} &\sum_{j \in G}\sum_{h} \Big(D_{jht}(G) - \sum_{i \in G, i\neq j}\sum_k \lambda_G(i,k,j,h) S_{ikt}\Big)^2 \\
+    \textrm{s.t. } &\sum_{j \in G, j\neq i} \sum_h \lambda_G(i, k, j, h) = 1,  \textrm{ for all $i \in G$ and $k$}. \\
+    & \lambda_G(i, k, j, h) \geq 0 . 
+\end{align}
+
+While it looks like there are many more parameters than data, we do not have to estimate all potential combinations of inputs to $\lambda$. Within each grouping $G$, we must estimate $\lambda$ for each potential supplier-depender pair within the group. DAUCO-uses are potential suppliers/dependers if that DAUCO-use ever supplies or depends on return flow. The number of suppliers and dependers are: 
+
+\begin{align}
+    N_G^S &= \sum_{i \in G} \sum_{k} \textbf{1}\Big[\sum_{t} S_{ikt}(G) > 0\Big] \\ 
+    N_G^D &= \sum_{j \in G} \sum_{h} \textbf{1}\Big[\sum_{t} D_{jht}(G) > 0\Big] 
+\end{align}
+
+Therefore, the total number of parameters in each group we need to estimate is $M_G = N_G^S \times N_G^D$. The number of observations is $T \times (N_G^S + N_G^D)$. Depending on these counts, we may need to assume a sparser model of return flow shares. 
+
+
+
+\subsection{Data Construction}\label{appendix_gw_data}
+
+\subsubsection{Crop and Water Use Data}
+
+The DWR Land and Water Use dataset is produced by the California Department of Water Resources and is publicly available. It contains detailed records on land use, water use, and crop-specific water requirements across different regions and time periods within California. This dataset is built to support water management and planning by providing insights into agricultural and urban water demand, helping the DWR and other entities in water resource planning, forecasting, and policy development. The data is collected through a combination of surveys, remote sensing, and field studies. The DWR conducts regular land use surveys across California, focusing particularly on agricultural areas where water use is significant. Surveyors use Geographic Information Systems (GIS) and satellite imagery to categorize land cover and usage (e.g., crop types, irrigated areas). This spatial information is cross-referenced with reported water usage data from water districts, irrigation districts, and other sources to estimate water application rates across various crops and regions.
+
+This study uses California’s Department of Water Resources Land and Water Use datasets from 2002 to 2020, organized at the DAUCO (Design Analysis Unit by County) level by crop and year. The primary variables include irrigated acres (ICA), applied water per acre (AW), evapotranspiration of applied water per acre (ETAW), and effective precipitation per acre (EP). Several adjustments were made to address data gaps, anomalous values, and missing information to ensure the dataset's reliability.
+
+To handle cases where irrigated crop area (ICA) values were zero, the values for AW, ETAW, and EP were also set to zero to reflect the absence of water application. The consumptive share, calculated as the ratio of ETAW to AW, was also refined for each observation. In cases where this ratio exceeded 1, the values of AW and ETAW were swapped to correct likely entry errors. Missing consumptive share values were filled using fallback averages from DAUCO, county, or state levels, which ensured consistency across the dataset.
+
+Missing values for water use were set to zero where appropriate, and key ratios, such as water use per acre and consumptive shares, were recalculated to capture DAUCO-level variations accurately and address anomalous values. These adjustments collectively ensure a clean and comprehensive dataset across California’s agricultural regions from 2002 to 2020.
+
+\subsubsection{Groundwater Data}
+
+\subsubsection{Water Utility Data}
+
+This study uses water utility data collected by the American Water Works Association (AWWA) for California utilities. Key variables include total volume of water supplied, water sourced from owned and imported supplies, the volume exported, service connections, annual costs, unit costs, and infrastructure characteristics such as pipe length. Modifications were made to the dataset to ensure consistency, remove missing or implausible values, and align with the study’s requirements.
+
+Observations missing supplier identifiers,  were excluded, ensuring all entries corresponded to identifiable utilities. Similarly, only observations with complete data on service connections, total volume supplied, and annual costs were retained. Missing values for key supply components were set to zero where it was appropriate, as with vol_own and vol_import. The vol_supply variable, representing total water supplied, was log-transformed for normalization.
+
+Further adjustments were made to standardize the unit costs across utilities. Observations where unit costs were reported in units other than acre-feet were converted using appropriate factors (e.g., gallons to acre-feet). Outlier checks were conducted on unit costs by calculating an average unit cost per utility across all years, then filtering out extreme values exceeding 10 times the utility’s mean unit cost.
+
+The dataset also incorporates auxiliary data, including geographic and climate information. Utility service area boundaries were spatially joined to match the relevant DAUCO regions, hydrologic regions, and historical rainfall data. Each utility’s primary DAUCO region was assigned based on the maximum overlap area. Rainfall data was aggregated for each utility to capture annual average rainfall within the service area, filling in missing values where necessary.
+
+After constructing the dataset, we applied sample restrictions. Utilities with reported water supply volumes below 1,000 acre-feet or fewer than 5,000 service connections were removed to focus on significant urban utilities. Observations were further restricted to include only those with continuous data across all required variables, with specific years (e.g., 2015) excluded due to incomplete data. Finally, median lot size and household income estimates were incorporated for each utility’s service area, providing demographic context for each utility’s consumer base.
+
+The resulting dataset provides a robust foundation for analyzing urban water use, capturing both the operational characteristics and consumer demographics of California’s major water utilities. Through these adjustments, this dataset facilitates a comprehensive assessment of urban water demand and supply dynamics.
+
+\subsubsection{Trade Data}
+
+\subsubsection{Hydrological Network Data}
+
+\subsection{Transaction Cost Estimation Details}
+
+\subsection{Appendix Figures}
+
+\begin{figure}[H]
+  \centering
+    \includegraphics[width=0.8\textwidth]{figures/water_right_example.pdf}
+  \caption{Example of Right to Surface Water}  \label{fig:water_right}
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+  \subfigure[Streams and Canals]{
+    \includegraphics[width=0.5\textwidth]{figures/river_map_w_canals_crop.pdf}
+  }
+  \hspace{0.05\textwidth} % Adjust the horizontal space between figures
+  \subfigure[Return Flow Network]{
+    \includegraphics[width=0.4\textwidth]{figures/rf_network.pdf}
+  }
+  \caption{Hydrological and Return Flow Networks}
+  \label{fig:networks}
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+  \subfigure[Profit/af Maximizing Crops]{
+    \includegraphics[width=0.45\textwidth]{figures/max_profit_crop_per_af.pdf}
+  }
+  \hspace{0.05\textwidth} % Adjust the horizontal space between figures
+  \subfigure[Marginal Cost of GW]{
+    \includegraphics[width=0.45\textwidth]{figures/gw_mc_map.pdf}
+  }
+  \caption{Agricultural Parameter Map Summary}
+  \label{fig:ag_param_map}
+\end{figure}
+
+
+\subsection{Tables}
+
+\begin{table}
+\begingroup
+\centering
+\caption{Trade Friction Regression}\label{appendix_friction_spec}
+\resizebox{0.45\textwidth}{!}{
+\begin{tabular}{lcccc}
+   \toprule
+    & \multicolumn{3}{c}{$\log (s_{odt}) - \log (s_{oot}) $}\\
+                  & (1)             & (2)            \\  
+   \midrule 
+   Constant       & -8.595$^{***}$  & -8.443$^{***}$\\   
+                  & (0.1815)       & (0.1619)\\   
+   CityToAg       & -0.0781         & 0.7328$^{***}$\\   
+                  & (0.1269)        & (0.1968)\\   
+   CityToCity     & -0.1447         & -0.1903\\   
+                  & (0.1267)        & (0.1125)\\   
+   AgToCity       & -0.3299$^{***}$ & -1.061$^{***}$\\   
+                  & (0.0264)          & (0.1249)\\   
+   AgCommunityVotes    & -0.5382$^{***}$ & -0.5502$^{***}$\\   
+                  & (0.1381)         & (0.1288)\\   
+   isRight        & -1.688$^{***}$   & -1.676$^{***}$\\   
+                  & (0.1169)         & (0.1136)\\   
+   ProjectRWD     & -0.4827$^{***}$  & -0.4525$^{***}$\\   
+                  & (0.0365)         & (0.0369)\\   
+   CrossDelta   & -0.5152$^{***}$ & -0.4420$^{***}$\\   
+                  & (0.0547)           & (0.0591)\\   
+   Distance (100 miles)      & -0.0267$^{***}$ & -0.0311$^{***}$\\   
+                  & (0.0077)          & (0.0072)\\   
+   GWDepthGap (10ft)     &                   &   \\   
+                  &                   &   \\   
+   MarginalGain (\$1k)   &                   & 1.335$^{***}$\\   
+                  &                   & (0.2093)\\   
+    \
+   Observations   & 11,932            & 11,932\\  
+   R$^2$          & 0.24034           & 0.29115\\  
+   Adjusted R$^2$ & 0.23894           & 0.28978\\  
+   \bottomrule
+\end{tabular}}
+\par\endgroup
+\end{table}
+
+\begin{table}
+\begingroup
+\centering
+\resizebox{0.75\textwidth}{!}{
+\begin{tabular}{lcccccc}
+   \toprule
+    & \multicolumn{2}{c}{LogSupply} & Price (\$100)       & \multicolumn{2}{c}{LogSupply} & Price (\$100)       \\
+                                  & IV            & OLS           & First-Stage           & IV            & OLS          & First-Stage\\  
+   \midrule 
+   Price (\$100)                          & -0.0094$^{**}$ & -0.0023$^{***}$ &               & -0.0233$^{***}$ & -0.0518$^{***}$ &   \\   
+                                  & (0.0043)       & (0.0008)        &               & (0.0039)        & (0.0107)        &   \\   
+   LogRain                        & -0.0018        & -0.0032         & -2.128$^{*}$  & 0.0192          & 0.0393$^{***}$  & -0.5283$^{**}$\\   
+                                  & (0.0253)       & (0.0151)        & (1.192)       & (0.0153)        & (0.0104)        & (0.2610)\\   
+   LogHouseholds                  & 0.7905$^{***}$ & 0.7952$^{***}$  & -1.175        & 1.031$^{***}$   & 0.9821$^{***}$  & 0.4536\\   
+                                  & (0.0808)       & (0.0819)        & (0.7646)      & (0.0258)        & (0.0099)        & (0.3447)\\   
+   LogVolOwn                      &                &                 & -0.3237$^{*}$ &                 &                 & -0.8433$^{***}$\\   
+                                  &                &                 & (0.1685)      &                 &                 & (0.0823)\\   
+   LogIncome                      &                &                 &               & 0.0681$^{**}$   & 0.0253          & 0.6669\\   
+                                  &                &                 &               & (0.0256)        & (0.0226)        & (0.8260)\\   
+   LogLotSize                     &                &                 &               & -0.0930         & 0.0650          & 0.7141\\   
+                                  &                &                 &               & (0.0992)        & (0.0501)        & (0.4845)\\   
+    \\
+   Observations                   & 1,998          & 1,998           & 1,998         & 1,998           & 1,998           & 1,998\\  
+   F-test (1st stage), Price      & 46.332         &                 &               & 58.310          &                 & \\  
+   R$^2$                          & 0.99875        & 0.99900         & 0.93286       & 0.95038         & 0.96908         & 0.37839\\  
+   Within R$^2$                   & 0.58473        & 0.66782         & 0.01465       & 0.94054         & 0.96294         & 0.07053\\  
+    \\
+   Year-HydroRegion fixed effects & $\checkmark$   & $\checkmark$    & $\checkmark$  & $\checkmark$    & $\checkmark$    & $\checkmark$\\   
+   UtilityID fixed effects        & $\checkmark$   & $\checkmark$    & $\checkmark$  &                 &                 & \\  
+   \bottomrule
+\end{tabular}}
+\par\endgroup
+\caption{Urban Demand Estimation}\label{urb_model_est}
+\end{table}
+
+\begin{table}
+\begingroup
+\centering
+\resizebox{0.75\textwidth}{!}{
+\begin{tabular}{lcccccc}
+   \toprule
+    & \multicolumn{2}{c}{LogSupply} & LogPrice      & \multicolumn{2}{c}{LogSupply} & LogPrice       \\
+                                  & IV            & OLS           & First-Stage           & IV            & OLS          & First-Stage\\  
+   \midrule 
+   LogPrice                       & -0.3383$^{**}$ & -0.0273$^{**}$ &               & -0.4230$^{***}$ & -0.1692$^{***}$ &   \\   
+                                  & (0.1413)       & (0.0132)       &               & (0.0630)        & (0.0178)        &   \\   
+   LogRain                        & -0.0050        & -0.0038        & -0.0520       & 0.0143          & 0.0328$^{***}$  & -0.0324$^{*}$\\   
+                                  & (0.0296)       & (0.0142)       & (0.0415)      & (0.0143)        & (0.0102)        & (0.0171)\\   
+   LogHouseholds                  & 0.7989$^{***}$ & 0.7968$^{***}$ & -0.0325       & 1.040$^{***}$   & 0.9967$^{***}$  & 0.0444$^{**}$\\   
+                                  & (0.0829)       & (0.0820)       & (0.0337)      & (0.0228)        & (0.0102)        & (0.0187)\\   
+   LogVolOwn                      &                &                & -0.0067       &                 &                 & -0.0451$^{***}$\\   
+                                  &                &                & (0.0069)      &                 &                 & (0.0036)\\   
+   LogIncome                      &                &                &               & 0.0709$^{***}$  & 0.0362          & 0.0315\\   
+                                  &                &                &               & (0.0254)        & (0.0236)        & (0.0420)\\   
+   LogLotSize                     &                &                &               & 0.0820          & 0.0988$^{**}$   & 0.0878$^{***}$\\   
+                                  &                &                &               & (0.0635)        & (0.0475)        & (0.0205)\\   
+    \\
+   Observations                   & 1,998          & 1,998          & 1,998         & 1,998           & 1,998           & 1,998\\  
+   F-test (1st stage), LogPrice   & 15.488         &                &               & 99.423          &                 & \\  
+   R$^2$                          & 0.99791        & 0.99898        & 0.94366       & 0.96386         & 0.97051         & 0.43281\\  
+   Within R$^2$                   & 0.30599        & 0.66234        & 0.00381       & 0.95669         & 0.96466         & 0.08178\\    
+    \\
+   Year-HydroRegion fixed effects & $\checkmark$   & $\checkmark$    & $\checkmark$  & $\checkmark$    & $\checkmark$    & $\checkmark$\\   
+   UtilityID fixed effects        & $\checkmark$   & $\checkmark$    & $\checkmark$  &                 &                 & \\  
+   \bottomrule
+\end{tabular}}
+\par\endgroup
+\caption{Urban Demand Estimation}\label{urb_model_est}
+\end{table}
+
+\begin{table}[H]
+\begingroup
+\centering
+\caption{Estimated Moments}\label{moment_est}
+\resizebox{0.85\textwidth}{!}{
+    \begin{tabular}{l|ccl|cc}
+  \hline
+  \hline
+Moment & Target & Estimate & & Target & Estimate\\ 
+\hline
+  \textit{Avg. Trade Volume (TAF)} &  &  & \textit{Avg. Net Trade by Region (TAF)} &  &  \\ 
+  AgToAg & 305.5 & 286.7 & Central Coast & 4.3 & 4.3 \\ 
+  CityToAg & 7.1 & 7.4 & Colorado River & 3 & 2.9\\ 
+  CityToCity & 3.8 & 3.9 & Sacramento River & -474.2 & -435.9\\ 
+  AgToCity & 18.4 & 22.8 & San Francisco Bay & 20 & 19.5 \\ 
+  IsRight & 13.8 & 15  & San Joaquin River & -172 & -170.1\\ 
+  ProjectRWD & 20.6 & 19.1 & South Coast & 6.7 & 6.6 \\ 
+  CrossDelta & 121.2 & 115.1  & South Lahontan & 13.4 & 11.8\\ 
+   &  &  & Tulare Lake & 598.8 & 560.9 \\ 
+  \textit{Other} &  &  \\ 
+  AvgDistance (miles) & 131.49 & 120.35 \\ 
+  Residual Variance & 4.17 & 4.42 \\ 
+
+   \hline
+\end{tabular}}
+\par\endgroup
+\caption*{\textit{Notes:} The table indicates the 17 moments we compute after simulating trade at the optimal parameters in Table XX. We report the target moment we observe in the data and our estimate.}
+\end{table}
+
+\begin{table}[h]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{r||cccccccccc}
+  \hline
+Counterfactual &   & Alfalfa & Almonds/Pistachios & Citrus/Subtropical & Corn & Cotton & Cucurbits & Dry Beans & Grain & Onion/Garlic \\ 
+  \hline
+ &  &  &  &  &  &  &  &  &  &  \\ 
+   & Dry & -0.64 & -0.67 & -0.46 & 0.03 & -1.43 & 0.09 & 0.01 & 0.52 & -0.13 \\ 
+  No AgToCity Friction & Normal & -0.49 & -0.48 & -0.39 & 0.06 & -0.14 & 0.07 & 0.11 & 0.37 & -0.06 \\ 
+   & Wet & -0.33 & -0.31 & -0.31 & 0.07 & -0.11 & 0.17 & 0.1 & 0.33 & -0.02 \\ 
+   &  &  &  &  &  &  &  &  &  &  \\ 
+   & Dry & 0.21 & 0.36 & 0.31 & -0.06 & 0.21 & -0.14 & -0.36 & -0.6 & 0.24 \\ 
+  No Delta Constraint & Normal & 0.08 & 0.3 & 0.09 & -0.02 & 0.06 & -0.07 & -0.08 & -0.13 & 0.04 \\ 
+   & Wet & 0.03 & 0.22 & 0.04 & -0.03 & 0.04 & -0.03 & -0.04 & -0.05 & 0.01 \\ 
+   &  &  &  &  &  &  &  &  &  &  \\ 
+   & Dry & 0.03 & -0.02 & 0.11 & -0.06 & 0.09 & -0.06 & -0.27 & -0.17 & 0.09 \\ 
+  No Delta Cost & Normal & -0.01 & 0.18 & 0.04 & -0.02 & 0.04 & -0.06 & -0.04 & -0.02 & -0.01 \\ 
+   & Wet & 0 & 0.18 & 0.04 & -0.04 & 0.03 & -0.02 & -0.04 & -0.02 & 0 \\ 
+   &  &  &  &  &  &  &  &  &  &  \\ 
+   & Dry & -0.39 & 0.25 & 1.58 & 0.02 & -2.34 & -0.19 & 0.04 & -0.6 & -0.16 \\ 
+  No Distance Cost & Normal & 0.02 & 0 & 1.85 & -0.09 & -0.44 & -0.53 & -0.25 & -0.71 & -0.36 \\ 
+   & Wet & 0.18 & 0.06 & 0.42 & 0.09 & -0.19 & 0 & 0.3 & -0.39 & 0.02 \\ 
+   &  &  &  &  &  &  &  &  &  &  \\ 
+   & Dry & -3.86 & -0.28 & 3.76 & -2.21 & -0.49 & -3.52 & -3.74 & -0.19 & -0.46 \\ 
+  No Frictions & Normal & -3.77 & -3.31 & 2.78 & -0.81 & 0.67 & -2.57 & -1.59 & 1.1 & -1.42 \\ 
+   & Wet & -1.13 & -2.18 & 3.11 & -0.2 & 0.26 & 0.25 & 0.51 & -0.18 & 0.06 \\ 
+   &  &  &  &  &  &  &  &  &  &  \\ 
+   & Dry & 0.03 & 0.03 & 0.05 & 0 & 0.02 & -0.01 & -0.01 & -0.07 & 0 \\ 
+  No RF Constraint. & Normal & 0 & 0.01 & 0.01 & 0 & 0.02 & -0.01 & 0 & -0.01 & -0.01 \\ 
+   & Wet & 0 & -0.01 & 0.01 & 0 & 0 & 0 & 0 & -0.01 & -0.01 \\ 
+   &  &  &  &  &  &  &  &  &  &  \\ 
+   & Dry & 0.06 & 0.04 & 0.11 & 0 & -0.31 & -0.03 & -0.04 & -0.17 & 0 \\ 
+  No RF Cost & Normal & 0.02 & 0.08 & 0.05 & -0.01 & 0.02 & -0.03 & 0 & -0.03 & -0.06 \\ 
+   & Wet & 0.01 & 0.09 & 0.03 & 0 & -0.02 & 0 & 0.01 & -0.02 & -0.04 \\ 
+   &  &  &  &  &  &  &  &  &  &  \\ 
+   & Dry & 0.48 & 0.79 & 0.78 & -0.19 & 0.27 & -0.39 & -0.85 & -1.14 & 0.39 \\ 
+  No RF Cost, No Delta Friction & Normal & 0.1 & 0.16 & 0.32 & -0.09 & 0.31 & -0.13 & -0.18 & -0.29 & -0.05 \\ 
+   & Wet & 0.09 & -0.33 & 0.17 & -0.09 & 0.05 & 0.07 & -0.06 & -0.13 & -0.05 \\ 
+   &  &  &  &  &  &  &  &  &  &  \\ 
+   & Dry & 0.07 & 2.41 & 1.73 & -0.31 & -0.48 & -1.14 & -1.28 & -1.65 & 0.51 \\ 
+  No Right/RF/Delta Cost & Normal & -0.87 & 0.36 & 0.84 & 0.55 & 0.61 & -0.38 & -0.44 & -0.29 & -0.36 \\ 
+   & Wet & -0.56 & -0.42 & 0.41 & 0.62 & 0.23 & -0.13 & -0.24 & -0.04 & -0.09 \\ 
+   \hline
+\end{tabular}}
+\caption{Example Table in Landscape}
+\end{table}
+
+\begin{table}[h]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{r||ccccccccccc}
+  \hline
+Counterfactual &   & Fresh Tomato & Other Deciduous & Other Field & Pasture & Potato & Processing Tomato & Rice & Safflower & Truck Crops & Vineyard \\ 
+  \hline
+ &  &  &  &  &  &  &  &  &  &  &  \\ 
+   & Dry & 0.08 & 0.09 & -0.07 & -0.65 & -0.01 & -0.12 & -0.51 & 0.09 & 0.08 & -0.1 \\ 
+  No AgToCity Friction & Normal & 0.04 & 0.32 & -0.02 & -1.06 & 0 & -0.03 & -0.16 & 0.14 & 0.04 & -0.09 \\ 
+   & Wet & 0.08 & 0.15 & -0.05 & -1.06 & 0.11 & -0.02 & -0.25 & 0.17 & 0.05 & -0.06 \\ 
+   &  &  &  &  &  &  &  &  &  &  &  \\ 
+   & Dry & -0.37 & 0.53 & 0.01 & -0.16 & -0.02 & -0.31 & -0.8 & -0.04 & -0.08 & 0.2 \\ 
+  No Delta Constraint & Normal & -0.11 & 0.19 & 0.04 & -0.37 & -0.02 & -0.08 & -0.12 & 0.04 & -0.03 & 0.09 \\ 
+   & Wet & -0.05 & 0.12 & 0 & -0.4 & 0 & -0.07 & -0.07 & 0.04 & -0.02 & 0.01 \\ 
+   &  &  &  &  &  &  &  &  &  &  &  \\ 
+   & Dry & -0.14 & 0.48 & -0.04 & -0.17 & -0.01 & -0.23 & -0.71 & -0.03 & -0.03 & 0.08 \\ 
+  No Delta Cost & Normal & -0.06 & 0.26 & 0.03 & -0.46 & -0.01 & -0.08 & -0.18 & 0.07 & -0.02 & 0.06 \\ 
+   & Wet & -0.05 & 0.14 & -0.01 & -0.43 & -0.01 & -0.09 & -0.14 & 0.08 & -0.02 & 0.01 \\ 
+   &  &  &  &  &  &  &  &  &  &  &  \\ 
+   & Dry & -0.3 & -0.1 & -0.07 & 1.18 & -0.99 & 0.02 & 0.54 & 0.15 & -0.74 & 0 \\ 
+  No Distance Cost & Normal & -0.67 & 0.01 & -0.14 & 0.94 & -1.01 & -0.31 & 0.02 & -0.33 & -1.15 & 0.22 \\ 
+   & Wet & 0.15 & 0.08 & -0.06 & 0.46 & -0.32 & -0.06 & 0.06 & -0.1 & -0.14 & 0.02 \\ 
+   &  &  &  &  &  &  &  &  &  &  &  \\ 
+   & Dry & -3.72 & -4.99 & -1.88 & -2.48 & -5.78 & -4.63 & -13.66 & 1.92 & -3.24 & 0.43 \\ 
+  No Frictions & Normal & -2.5 & -6.8 & -0.74 & -1.67 & -5.03 & -2.97 & -8.99 & 1.75 & -2.84 & 1.12 \\ 
+   & Wet & 2.51 & -6.16 & -1.21 & -1.46 & -0.67 & -2.47 & -9.98 & 3.39 & -1.11 & 1.02 \\ 
+   &  &  &  &  &  &  &  &  &  &  &  \\ 
+   & Dry & 0 & 0.02 & 0.01 & 0.02 & 0 & 0 & -0.01 & 0.01 & -0.02 & 0.02 \\ 
+  No RF Constraint. & Normal & 0 & 0 & 0 & 0.02 & 0 & 0 & 0 & 0 & -0.01 & 0.01 \\ 
+   & Wet & 0 & 0 & 0 & 0.04 & 0 & 0 & 0 & 0 & 0 & 0 \\ 
+   &  &  &  &  &  &  &  &  &  &  &  \\ 
+   & Dry & -0.01 & 0.22 & 0.01 & 0.15 & -0.01 & -0.03 & -0.09 & 0.03 & -0.04 & 0.03 \\ 
+  No RF Cost & Normal & 0.01 & 0.07 & -0.01 & 0.05 & 0 & -0.01 & -0.01 & -0.02 & -0.03 & 0.02 \\ 
+   & Wet & 0.02 & 0.01 & -0.02 & -0.08 & 0 & -0.01 & -0.02 & 0.02 & -0.01 & 0.02 \\ 
+   &  &  &  &  &  &  &  &  &  &  &  \\ 
+   & Dry & -0.69 & 0.52 & -0.06 & 0.06 & -0.06 & -0.67 & -2.08 & -0.07 & -0.28 & 0.33 \\ 
+  No RF Cost, No Delta Friction & Normal & -0.26 & 0.71 & 0.08 & -0.06 & -0.04 & -0.23 & -0.5 & 0.03 & -0.15 & 0.23 \\ 
+   & Wet & -0.13 & 0.64 & -0.06 & 0.35 & -0.01 & -0.21 & -0.33 & 0.13 & -0.07 & 0.06 \\ 
+   &  &  &  &  &  &  &  &  &  &  &  \\ 
+   & Dry & -1.64 & 0.32 & -0.12 & -1.47 & -0.62 & -1.47 & -3.5 & 1.57 & -0.65 & 0.33 \\ 
+  No Right/RF/Delta Cost & Normal & -0.7 & 0.28 & 0.2 & -0.78 & -0.42 & -0.66 & -1.26 & 1.28 & -0.31 & 0.64 \\ 
+   & Wet & -0.38 & -0.12 & -0.02 & -0.69 & -0.35 & -0.57 & -0.87 & 1.21 & -0.07 & 0.05 \\ 
+   \hline
+24\end{tabular}}
+\caption{Example Table in Landscape}
+\end{table}
+
+
+
+\begin{table}
+\begingroup
+\centering
+\caption{Counterfactual Results}\label{appendix_cf_table}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{r||cccccccc}
+  \hline
+  \hline
+ &  & Trade Volume & Net Gain & Cost & City Surplus & Ag. Surplus & Fallowing & Pumping \\ 
+  Counterfactual &  & (TAF) & (\$M) & (\$M) & (\$M) & (\$M) & \% & \% \\ 
+   &  &  &  &  &  &  &  &  \\ 
+   & Dry & 135 & 3.6 & 34 & 0.2 & 37.3 & 0.13 & 0.2 \\ 
+  No Delta Cost & Normal & 104 & 2.4 & 24.7 & 0.2 & 26.9 & 0 & 0.17 \\ 
+   & Wet & 70 & 1.6 & 16.5 & 0 & 18 & 0.07 & 0.11 \\ 
+   &  &  &  &  &  &  &  &  \\ 
+   & Dry & 9 & 6.9 & 2.2 & 6 & 3.1 & -0.02 & 0.01 \\ 
+  No RF Constraint & Normal & 5 & 4.4 & 2.8 & 5.8 & 1.4 & -0.01 & 0 \\ 
+   & Wet & 3 & 1.2 & 3.6 & 4 & 0.7 & 0 & 0 \\ 
+   &  &  &  &  &  &  &  &  \\ 
+   & Dry & 148 & 8.9 & 44.5 & 1.6 & 51.8 & -0.02 & 0.09 \\ 
+  No Delta Constraint & Normal & 68 & 4.8 & 19.4 & 1.9 & 22.3 & -0.08 & 0.04 \\ 
+   & Wet & 32 & 1.2 & 10.4 & 1.7 & 10 & 0.01 & 0 \\ 
+   &  &  &  &  &  &  &  &  \\ 
+   & Dry & 1692 & 63.6 & 302 & 1.1 & 364.5 &  &  \\ 
+  No Distance Cost & Normal & 1893 & 59.4 & 348 & 1.1 & 406.2 &  &  \\ 
+   & Wet & 1445 & 41.4 & 276.3 & 1.5 & 316.2 &  &  \\ 
+   &  &  &  &  &  &  &  &  \\ 
+   & Dry & 9929 & 713 & 483.5 & 178.5 & 1018.1 &  &  \\ 
+  No Frictions & Normal & 13052 & 763.3 & 672.1 & 170.8 & 1264.5 &  &  \\ 
+   & Wet & 14711 & 787.7 & 710.4 & 174.6 & 1323.5 &  &  \\ 
+   \hline
+\end{tabular}}
+\par\endgroup
+\caption*{\textit{Notes: } Table reports the levels of various trading outcomes using baseline estimates, and then reports the relative change in those statistics across various counterfactuals. For each counterfactual outcome, we report the average within types of years: Dry, Normal, and Wet. The table reports estimates on years 2012-2015 where 2012 was Wet, 2013 was Normal, and 2014-2015 were dry.}
+\end{table}
+    
+\end{onehalfspacing}
+
+
+\end{document}
